@@ -8,21 +8,18 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
-type GameData struct {
-	ScreenWidth  int // in tiles
-	ScreenHeight int
-
-	TileWidth  int
-	TileHeight int
+type Level struct {
+	Width  int
+	Height int
+	Tiles  []MapTile
 }
 
-func NewGameData() GameData {
-	return GameData{
-		ScreenWidth:  40,
-		ScreenHeight: 25,
-		TileWidth:    32,
-		TileHeight:   32,
-	}
+func NewLevel() Level {
+	l := Level{}
+	tiles := l.createTiles()
+	l.Tiles = tiles
+
+	return l
 }
 
 type MapTile struct {
@@ -32,50 +29,36 @@ type MapTile struct {
 	Image   *ebiten.Image
 }
 
-func GetIndexFromXY(x, y int) int {
-	gd := NewGameData()
-	return y*gd.ScreenWidth + x
-}
-
-type WallDirection int
-
-const (
-	WALL_UP WallDirection = iota
-	WALL_DOWN
-	WALL_LEFT
-	WALL_RIGHT
-)
-
-type ImageMap struct {
-	Wall  map[int]*ebiten.Image
-	Floor *ebiten.Image
-}
-
-func LoadImage(name string) (*ebiten.Image, error) {
+func loadImage(name string) (*ebiten.Image, error) {
 	img, _, err := ebitenutil.NewImageFromFile(fmt.Sprintf("assets/tiles/%s.png", name))
 
 	return img, err
 }
 
-func CreateTiles() []MapTile {
+func getIndexFromXY(x, y int) int {
+	gd := NewGameData()
+	return y*gd.ScreenWidth + x
+}
+
+func (l *Level) createTiles() []MapTile {
 	gd := NewGameData()
 	tiles := make([]MapTile, gd.ScreenWidth*gd.ScreenHeight)
 
-	var wallImageCache = make(map[string]*ebiten.Image)
+	var imageCache = make(map[string]*ebiten.Image)
 	var (
 		err error
 		img *ebiten.Image
 	)
 
-	img, err = LoadImage("floor")
+	img, err = loadImage("floor")
 	if err != nil {
 		log.Fatalf("Failed to load image %s: %v", "floor", err)
 	}
-	wallImageCache["floor"] = img
+	imageCache["floor"] = img
 
 	for x := 0; x < gd.ScreenWidth; x++ {
 		for y := 0; y < gd.ScreenHeight; y++ {
-			index := GetIndexFromXY(x, y)
+			index := getIndexFromXY(x, y)
 			if x == 0 || x == gd.ScreenWidth-1 || y == 0 || y == gd.ScreenHeight-1 {
 				tiles[index] = MapTile{
 					PixelX:  x * gd.TileWidth,
@@ -95,10 +78,10 @@ func CreateTiles() []MapTile {
 	// Second pass: assign wall images based on neighbors using blob mask
 	for x := 0; x < gd.ScreenWidth; x++ {
 		for y := 0; y < gd.ScreenHeight; y++ {
-			index := GetIndexFromXY(x, y)
+			index := getIndexFromXY(x, y)
 			tile := &tiles[index]
 			if !tile.Blocked {
-				tile.Image = wallImageCache["floor"]
+				tile.Image = imageCache["floor"]
 				continue
 			}
 			// Compute 8-bit mask
@@ -107,13 +90,13 @@ func CreateTiles() []MapTile {
 
 			tileName := blobMaskToTile(mask)
 
-			img, ok := wallImageCache[tileName]
+			img, ok := imageCache[tileName]
 			if !ok {
-				img, err = LoadImage(tileName)
+				img, err = loadImage(tileName)
 				if err != nil {
 					log.Fatalf("Failed to load image %s: %v", tileName, err)
 				}
-				wallImageCache[tileName] = img
+				imageCache[tileName] = img
 			}
 			tile.Image = img
 		}
