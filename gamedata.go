@@ -16,3 +16,7 @@ func NewGameData() GameData {
 		TileHeight:   32,
 	}
 }
+
+func (gd GameData) GetIndexFromXY(x, y int) int {
+	return y*gd.ScreenWidth + x
+}

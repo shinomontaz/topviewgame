@@ -2,7 +2,10 @@ module topviewgame
 
 go 1.23.8
 
-require github.com/hajimehoshi/ebiten/v2 v2.8.8
+require (
+	github.com/bytearena/ecs v1.0.0
+	github.com/hajimehoshi/ebiten/v2 v2.8.8
+)
 
 require (
 	github.com/ebitengine/gomobile v0.0.0-20240911145611-4856209ac325 // indirect

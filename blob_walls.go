@@ -1,5 +1,18 @@
 package main
 
+import (
+	"fmt"
+
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+)
+
+func loadImage(name string) (*ebiten.Image, error) {
+	img, _, err := ebitenutil.NewImageFromFile(fmt.Sprintf("assets/tiles/%s.png", name))
+
+	return img, err
+}
+
 func computeMask(x, y int, tiles []MapTile, gd GameData) uint8 {
 	// Use this order: N, S, E, W, NW, NE, SW, SE
 	neighbors := [8][2]int{
@@ -20,7 +33,7 @@ func computeMask(x, y int, tiles []MapTile, gd GameData) uint8 {
 		if nx < 0 || nx >= gd.ScreenWidth || ny < 0 || ny >= gd.ScreenHeight {
 			wall = true
 		} else {
-			nIdx := getIndexFromXY(nx, ny)
+			nIdx := gd.GetIndexFromXY(nx, ny)
 			wall = tiles[nIdx].Blocked
 		}
 		if wall {
