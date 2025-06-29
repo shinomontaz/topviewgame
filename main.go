@@ -9,32 +9,46 @@ import (
 )
 
 type Game struct {
-	Map       GameMap
-	World     *ecs.Manager
-	WorldTags map[string]ecs.Tag
+	Map         GameMap
+	World       *ecs.Manager
+	WorldTags   map[string]ecs.Tag
+	Turn        TurnState
+	TurnCounter int
 }
 
 func NewGame() *Game {
-	world, tags := InitializeWorld()
+	m := NewGameMap()
+	world, tags := InitializeWorld(m.CurrentLevel)
+
 	return &Game{
-		Map:       NewGameMap(),
-		World:     world,
-		WorldTags: tags,
+		Map:         m,
+		World:       world,
+		WorldTags:   tags,
+		Turn:        PlayerTurn,
+		TurnCounter: 0,
 	}
+
 }
 
 func (g *Game) Layout(w, h int) (int, int) {
 	gd := NewGameData()
+
 	return gd.TileHeight * gd.ScreenWidth, gd.TileWidth * gd.ScreenHeight
 }
 
 func (g *Game) Update() error {
-	TryMoveplayer(g)
+	g.TurnCounter++
+	if g.Turn == PlayerTurn && g.TurnCounter > 10 {
+		TryMovePlayer(g)
+	}
+
+	g.Turn = PlayerTurn
+
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	level := g.Map.Dungeons[0].Levels[0]
+	level := g.Map.CurrentLevel
 	level.Draw(screen)
 
 	ProcessRenderables(g, level, screen)
