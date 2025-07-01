@@ -5,6 +5,7 @@ go 1.23.8
 require (
 	github.com/bytearena/ecs v1.0.0
 	github.com/hajimehoshi/ebiten/v2 v2.8.8
+	github.com/norendren/go-fov v1.0.1
 )
 
 require (

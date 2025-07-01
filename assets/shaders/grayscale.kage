@@ -1,0 +1,10 @@
+//kage:unit pixels
+package main
+
+func Fragment(targetCoords vec4, sourceCoords vec2, color vec4) vec4 {
+    // Calculate the grayscale value using the standard formula:
+    // Gray = 0.299 * Red + 0.587 * Green + 0.114 * Blue
+    gray := 0.299 * color.r + 0.587 * color.g + 0.114 * color.b;
+    // Return a new color with equal red, green, and blue components set to the grayscale value
+    return vec4(gray, gray, gray, color.a);
+}

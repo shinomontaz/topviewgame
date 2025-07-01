@@ -1,32 +1,49 @@
 package main
 
 import (
+	"image/color"
 	"log"
+	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/norendren/go-fov/fov"
 )
 
 type MapTile struct {
-	PixelX  int
-	PixelY  int
-	Blocked bool
-	Image   *ebiten.Image
+	PixelX     int
+	PixelY     int
+	Blocked    bool
+	IsRevealed bool
+	Image      *ebiten.Image
 }
 
 type Level struct {
-	Width  int
-	Height int
-	gd     GameData
-	Tiles  []MapTile
-	Rooms  []Rect
+	Width         int
+	Height        int
+	gd            GameData
+	Tiles         []MapTile
+	Rooms         []Rect
+	PlayerVisible *fov.View
+	shader        *ebiten.Shader
 }
 
 func NewLevel() Level {
 	l := Level{
-		gd: NewGameData(),
+		gd:            NewGameData(),
+		PlayerVisible: fov.New(),
 	}
 	l.build()
 	l.adjust()
+
+	bytes, err := os.ReadFile("assets/shaders/grayscale.kage")
+	if err != nil {
+		log.Fatal(err)
+	}
+	shader, err := ebiten.NewShader(bytes)
+	if err != nil {
+		log.Fatal(err)
+	}
+	l.shader = shader
 
 	return l
 }
@@ -161,13 +178,36 @@ func (l *Level) adjust() {
 	}
 }
 
+func (l Level) InBounds(x, y int) bool {
+	if x < 0 || x > l.gd.ScreenWidth || y < 0 || y > l.gd.ScreenHeight {
+		return false
+	}
+
+	return true
+}
+
+func (l Level) IsOpaque(x, y int) bool {
+	return l.Tiles[l.GetIndexFromXY(x, y)].Blocked
+}
+
 func (l *Level) Draw(screen *ebiten.Image) {
+	screen.Fill(color.RGBA{0, 0, 0, 255})
 	for x := 0; x < l.gd.ScreenWidth; x++ {
 		for y := 0; y < l.gd.ScreenHeight; y++ {
-			tile := l.Tiles[l.gd.GetIndexFromXY(x, y)]
-			op := &ebiten.DrawImageOptions{}
-			op.GeoM.Translate(float64(tile.PixelX), float64(tile.PixelY))
-			screen.DrawImage(tile.Image, op)
+			isVisible := l.PlayerVisible.IsVisible(x, y)
+			idx := l.gd.GetIndexFromXY(x, y)
+			tile := l.Tiles[idx]
+			if isVisible {
+				op := &ebiten.DrawImageOptions{}
+				op.GeoM.Translate(float64(tile.PixelX), float64(tile.PixelY))
+				screen.DrawImage(tile.Image, op)
+				l.Tiles[idx].IsRevealed = true
+			} else if tile.IsRevealed {
+				op := &ebiten.DrawRectShaderOptions{}
+				op.Images[0] = tile.Image
+				op.GeoM.Translate(float64(tile.PixelX), float64(tile.PixelY))
+				screen.DrawRectShader(tile.Image.Bounds().Dx(), tile.Image.Bounds().Dy(), l.shader, op)
+			}
 		}
 	}
 }
