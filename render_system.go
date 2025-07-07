@@ -4,8 +4,8 @@ import "github.com/hajimehoshi/ebiten/v2"
 
 func ProcessRenderables(g *Game, l Level, screen *ebiten.Image) {
 	for _, result := range g.World.Query(g.WorldTags["renderables"]) {
-		pos := result.Components[position].(*Position)
-		img := result.Components[renderable].(*Renderable).Image
+		pos := result.Components[positionC].(*Position)
+		img := result.Components[renderableC].(Renderable).GetImage(g.Dt())
 
 		index := l.GetIndexFromXY(pos.X, pos.Y)
 		tile := l.Tiles[index]
