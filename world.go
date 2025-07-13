@@ -1,44 +1,39 @@
 package main
 
 import (
-	"log"
-
 	"github.com/bytearena/ecs"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
-var position *ecs.Component
-var renderable *ecs.Component
+var positionC *ecs.Component
+var renderableC *ecs.Component
+var playerC *ecs.Component
 
 func InitializeWorld(startingLevel Level) (*ecs.Manager, map[string]ecs.Tag) {
 	tags := make(map[string]ecs.Tag)
 	manager := ecs.NewManager()
 
-	player := manager.NewComponent()
-	position = manager.NewComponent()
-	renderable = manager.NewComponent()
-	movable := manager.NewComponent()
-
-	playerImg, _, err := ebitenutil.NewImageFromFile("assets/actors/GraveRobber2.png")
-	if err != nil {
-		log.Fatal(err)
-	}
+	playerC = manager.NewComponent()
+	positionC = manager.NewComponent()
+	renderableC = manager.NewComponent()
+	movableC := manager.NewComponent()
 
 	startingRoom := startingLevel.Rooms[0]
 	playerX, playerY := startingRoom.Center()
 
-	manager.NewEntity().
-		AddComponent(player, Player{}).
-		AddComponent(renderable, &Renderable{
-			Image: playerImg,
-		}).
-		AddComponent(movable, Movable{}).
-		AddComponent(position, &Position{X: playerX, Y: playerY})
+	player := NewPlayer()
+	player.level = &startingLevel
+	player.position = &Position{X: playerX, Y: playerY}
 
-	players := ecs.BuildTag(player, position)
+	manager.NewEntity().
+		AddComponent(playerC, player).
+		AddComponent(renderableC, player).
+		AddComponent(movableC, Movable{}).
+		AddComponent(positionC, &Position{X: playerX, Y: playerY})
+
+	players := ecs.BuildTag(playerC, positionC)
 	tags["players"] = players
 
-	renderables := ecs.BuildTag(renderable, position)
+	renderables := ecs.BuildTag(renderableC, positionC)
 	tags["renderables"] = renderables
 
 	return manager, tags

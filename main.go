@@ -3,17 +3,26 @@ package main
 import (
 	_ "image/png"
 	"log"
+	"time"
+	"topviewgame/controller"
 
 	"github.com/bytearena/ecs"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+type controllable interface {
+	GetDirection() (dx, dy int)
+}
+
 type Game struct {
-	Map         GameMap
-	World       *ecs.Manager
-	WorldTags   map[string]ecs.Tag
-	Turn        TurnState
-	TurnCounter int
+	Map              GameMap
+	World            *ecs.Manager
+	WorldTags        map[string]ecs.Tag
+	Turn             TurnState
+	TurnCounter      int
+	dt               float64
+	last             time.Time
+	PlayerController controllable
 }
 
 func NewGame() *Game {
@@ -21,11 +30,13 @@ func NewGame() *Game {
 	world, tags := InitializeWorld(m.CurrentLevel)
 
 	return &Game{
-		Map:         m,
-		World:       world,
-		WorldTags:   tags,
-		Turn:        PlayerTurn,
-		TurnCounter: 0,
+		PlayerController: controller.Human{},
+		Map:              m,
+		World:            world,
+		WorldTags:        tags,
+		Turn:             PlayerTurn,
+		TurnCounter:      0,
+		last:             time.Now(),
 	}
 
 }
@@ -37,6 +48,11 @@ func (g *Game) Layout(w, h int) (int, int) {
 }
 
 func (g *Game) Update() error {
+	g.dt = time.Since(g.last).Seconds()
+	g.last = time.Now()
+
+	UpdateAnimations(g.dt, g)
+
 	g.TurnCounter++
 	if g.Turn == PlayerTurn && g.TurnCounter > 10 {
 		TryMovePlayer(g)
