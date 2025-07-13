@@ -9,9 +9,17 @@ import (
 	"github.com/norendren/go-fov/fov"
 )
 
+type TileType int
+
+const (
+	WALL TileType = iota
+	FLOOR
+)
+
 type MapTile struct {
 	PixelX     int
 	PixelY     int
+	TileType   TileType
 	Blocked    bool
 	IsRevealed bool
 	Image      *ebiten.Image
@@ -62,9 +70,10 @@ func (l *Level) build() {
 		for y := 0; y < l.gd.ScreenHeight; y++ {
 			index := l.gd.GetIndexFromXY(x, y)
 			l.Tiles[index] = MapTile{
-				PixelX:  x * l.gd.TileWidth,
-				PixelY:  y * l.gd.TileHeight,
-				Blocked: true,
+				PixelX:   x * l.gd.TileWidth,
+				PixelY:   y * l.gd.TileHeight,
+				Blocked:  true,
+				TileType: WALL,
 			}
 		}
 	}
@@ -114,6 +123,7 @@ func (l *Level) addRoom(room Rect) {
 		for x := room.X1 + 1; x < room.X2; x++ {
 			index := l.GetIndexFromXY(x, y)
 			l.Tiles[index].Blocked = false
+			l.Tiles[index].TileType = FLOOR
 		}
 	}
 }
@@ -125,6 +135,7 @@ func (l *Level) addHorizontalTunnel(x1, x2, y int) {
 			continue
 		}
 		l.Tiles[index].Blocked = false
+		l.Tiles[index].TileType = FLOOR
 	}
 }
 
@@ -135,6 +146,7 @@ func (l *Level) addVerticalTunnel(y1, y2, x int) {
 			continue
 		}
 		l.Tiles[index].Blocked = false
+		l.Tiles[index].TileType = FLOOR
 	}
 }
 
@@ -187,7 +199,7 @@ func (l Level) InBounds(x, y int) bool {
 }
 
 func (l Level) IsOpaque(x, y int) bool {
-	return l.Tiles[l.GetIndexFromXY(x, y)].Blocked
+	return l.Tiles[l.GetIndexFromXY(x, y)].TileType == WALL
 }
 
 func (l *Level) Draw(screen *ebiten.Image) {

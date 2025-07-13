@@ -7,16 +7,18 @@ func ProcessRenderables(g *Game, l Level, screen *ebiten.Image) {
 		pos := result.Components[positionC].(*Position)
 		img := result.Components[renderableC].(Renderable).GetImage()
 
-		index := l.GetIndexFromXY(pos.X, pos.Y)
-		tile := l.Tiles[index]
+		if l.PlayerVisible.IsVisible(pos.X, pos.Y) {
+			index := l.GetIndexFromXY(pos.X, pos.Y)
+			tile := l.Tiles[index]
 
-		op := &ebiten.DrawImageOptions{}
+			op := &ebiten.DrawImageOptions{}
 
-		offsetX := float64((48 - 32) / 2)
-		offsetY := float64(48 - 32) // align bottom of sprite with bottom of tile
+			offsetX := float64((48 - 32) / 2)
+			offsetY := float64(48 - 32) // align bottom of sprite with bottom of tile
 
-		//		op.GeoM.Translate(float64(tile.PixelX), float64(tile.PixelY))
-		op.GeoM.Translate(float64(tile.PixelX)-offsetX, float64(tile.PixelY)-offsetY)
-		screen.DrawImage(img, op)
+			op.GeoM.Translate(float64(tile.PixelX)-offsetX, float64(tile.PixelY)-offsetY)
+			screen.DrawImage(img, op)
+		}
+
 	}
 }
