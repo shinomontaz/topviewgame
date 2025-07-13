@@ -1,39 +1,32 @@
 package main
 
 import (
-	"log"
-
 	"github.com/bytearena/ecs"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 var positionC *ecs.Component
 var renderableC *ecs.Component
+var playerC *ecs.Component
 
 func InitializeWorld(startingLevel Level) (*ecs.Manager, map[string]ecs.Tag) {
 	tags := make(map[string]ecs.Tag)
 	manager := ecs.NewManager()
 
-	playerC := manager.NewComponent()
+	playerC = manager.NewComponent()
 	positionC = manager.NewComponent()
 	renderableC = manager.NewComponent()
 	movableC := manager.NewComponent()
 
-	playerImg, _, err := ebitenutil.NewImageFromFile("assets/actors/GraveRobber2.png")
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	startingRoom := startingLevel.Rooms[0]
 	playerX, playerY := startingRoom.Center()
 
-	player := Player{
-		Image: playerImg,
-	}
+	player := NewPlayer()
+	player.level = &startingLevel
+	player.position = &Position{X: playerX, Y: playerY}
 
 	manager.NewEntity().
 		AddComponent(playerC, player).
-		AddComponent(renderableC, &player).
+		AddComponent(renderableC, player).
 		AddComponent(movableC, Movable{}).
 		AddComponent(positionC, &Position{X: playerX, Y: playerY})
 

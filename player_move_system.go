@@ -1,41 +1,32 @@
 package main
 
-import "github.com/hajimehoshi/ebiten/v2"
-
 func TryMovePlayer(g *Game) {
 	players := g.WorldTags["players"]
-
-	x := 0
-	y := 0
-
-	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
-		y = -1
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
-		y = 1
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
-		x = -1
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
-		x = 1
-	}
-
 	level := g.Map.CurrentLevel
+
+	dx, dy := g.PlayerController.GetDirection()
+	hasMoved := false
+
 	for _, result := range g.World.Query(players) {
 		pos := result.Components[positionC].(*Position)
-		index := level.GetIndexFromXY(pos.X+x, pos.Y+y)
+		player := result.Components[playerC].(*Player)
 
-		tile := level.Tiles[index]
-		if !tile.Blocked {
-			pos.X += x
-			pos.Y += y
-			level.PlayerVisible.Compute(level, pos.X, pos.Y, 8)
+		newX := pos.X + dx
+		newY := pos.Y + dy
+		index := level.GetIndexFromXY(newX, newY)
+
+		if dx != 0 || dy != 0 && index >= 0 && index < len(level.Tiles) && !level.Tiles[index].Blocked {
+			pos.X = newX
+			pos.Y = newY
+			player.SetMoved()
+			hasMoved = true
 		}
-	}
 
-	if x != 0 || y != 0 {
-		g.Turn = GetNextState(g.Turn)
-		g.TurnCounter = 0
+		level.PlayerVisible.Compute(level, pos.X, pos.Y, 8)
+
+		if hasMoved {
+			g.Turn = GetNextState(g.Turn)
+			g.TurnCounter = 0
+		}
 	}
 }
