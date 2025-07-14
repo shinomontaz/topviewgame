@@ -4,9 +4,12 @@ import (
 	"github.com/bytearena/ecs"
 )
 
-var positionC *ecs.Component
-var renderableC *ecs.Component
-var playerC *ecs.Component
+var (
+	positionC   *ecs.Component
+	renderableC *ecs.Component
+	playerC     *ecs.Component
+	monsterC    *ecs.Component
+)
 
 func InitializeWorld(startingLevel Level) (*ecs.Manager, map[string]ecs.Tag) {
 	tags := make(map[string]ecs.Tag)
@@ -16,7 +19,7 @@ func InitializeWorld(startingLevel Level) (*ecs.Manager, map[string]ecs.Tag) {
 	positionC = manager.NewComponent()
 	renderableC = manager.NewComponent()
 	movableC := manager.NewComponent()
-	monsterC := manager.NewComponent()
+	monsterC = manager.NewComponent()
 
 	startingRoom := startingLevel.Rooms[0]
 	playerX, playerY := startingRoom.Center()
@@ -31,14 +34,19 @@ func InitializeWorld(startingLevel Level) (*ecs.Manager, map[string]ecs.Tag) {
 
 	for _, room := range startingLevel.Rooms {
 		if room.X1 != startingRoom.X1 {
-			var monsterType MonsterType
+			var (
+				monsterType MonsterType
+				monsterName string
+			)
 			switch rnd.Intn(2) {
 			case 0:
 				monsterType = SKELETON
+				monsterName = "Skeleton"
 			case 1:
 				monsterType = ZOMBIE
+				monsterName = "Zombie"
 			}
-			monster := NewMonster(monsterType)
+			monster := NewMonster(monsterType, monsterName)
 			mX, mY := room.Center()
 			manager.NewEntity().
 				AddComponent(monsterC, monster).
@@ -49,6 +57,9 @@ func InitializeWorld(startingLevel Level) (*ecs.Manager, map[string]ecs.Tag) {
 				})
 		}
 	}
+
+	monsters := ecs.BuildTag(monsterC, positionC)
+	tags["monsters"] = monsters
 
 	players := ecs.BuildTag(playerC, positionC)
 	tags["players"] = players

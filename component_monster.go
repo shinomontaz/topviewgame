@@ -10,6 +10,7 @@ import (
 )
 
 type Monster struct {
+	name     string
 	state    stater
 	states   map[int]stater
 	frame    int
@@ -26,8 +27,10 @@ const (
 // GOBLIN
 )
 
-func NewMonster(t MonsterType) *Monster {
-	pl := &Monster{}
+func NewMonster(t MonsterType, n string) *Monster {
+	pl := &Monster{
+		name: n,
+	}
 	var (
 		sheet *ebiten.Image
 		err   error
@@ -61,6 +64,10 @@ func NewMonster(t MonsterType) *Monster {
 
 func (p *Monster) GetImage() *ebiten.Image {
 	return p.state.GetFrame()
+}
+
+func (p *Monster) GetName() string {
+	return p.name
 }
 
 func (p *Monster) SetState(newId int) {
