@@ -1,40 +1,37 @@
 //kage:unit pixels
 package main
 
-var TileWidth float
-var TileHeight float
-var MaskWidth float
-var MaskHeight float
-var CellSize float
+var Visible [1000]float
+var ScreenWidth int
 
-func Fragment(targetCoords vec4, sourceCoords vec2, _ vec4) vec4 {
-    color := imageSrc0At(sourceCoords).rgba
+func Fragment(pos vec4, uv vec2, _ vec4) vec4 {
+    color := imageSrc0At(uv).rgba
 
-    // Calculate which tile this pixel belongs to
-    tileX := int(targetCoords.x / TileWidth)
-    tileY := int(targetCoords.y / TileHeight)
+    tileX := int(floor(pos.x / 32.0))
+    tileY := int(floor(pos.y / 32.0))
+    index := tileY * ScreenWidth + tileX
 
-    // Mask is a texture where each pixel = one tile
-    maskCoord := vec2(
-        (float(tileX) + 0.5) / MaskWidth,
-        (float(tileY) + 0.5) / MaskHeight,
-    )
-    mask := imageSrc1At(maskCoord).r  // 0=hidden, 1=visible, 2=revealed
+	if index < 0 || index >= len(Visible) {
+		return vec4(0.0, 0.0, 0.0, 1.0)  // fallback for safety
+	}
 
-    if mask == 1.0 {
-        // Fully visible: normal color
+    vis := Visible[index]
+
+    if vis >= 1.0 {
         return color
-    } else if mask == 2.0 {
-        // Revealed: grayscale with checker
-        g := 0.299*color.r + 0.587*color.g + 0.114*color.b
-        cellCoords := floor(targetCoords/CellSize)
-        if mod(cellCoords.x + cellCoords.y, 2) == 0 {
-            return vec4(g, g, g, color.a)
-        } else {
-            return vec4(0, 0, 0, 1)
-        }
-    } else {
-        // Hidden: black
-        return vec4(0, 0, 0, 1)
     }
+
+    g := 0.299 * color.r + 0.587 * color.g + 0.114 * color.b
+    grayscale := vec4(g, g, g, color.a)
+    if vis >= 0.5 {
+        const CellSize = 2.0
+        cellCoords := floor(pos.xy / CellSize)
+        if mod(cellCoords.x + cellCoords.y, 2.0) == 0.0 {
+            return grayscale
+        } else {
+            return vec4(0.0, 0.0, 0.0, 1.0)
+        }
+    }
+
+    return vec4(0.0, 0.0, 0.0, 1.0)
 }

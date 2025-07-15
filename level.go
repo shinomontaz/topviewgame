@@ -33,6 +33,7 @@ type Level struct {
 	Rooms         []Rect
 	PlayerVisible *fov.View
 	shader        *ebiten.Shader
+	OffScreen     *ebiten.Image
 }
 
 func NewLevel() Level {
@@ -43,7 +44,7 @@ func NewLevel() Level {
 	l.build()
 	l.adjust()
 
-	bytes, err := os.ReadFile("assets/shaders/grayscale.kage")
+	bytes, err := os.ReadFile("assets/shaders/single_grayscale.kage")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -204,24 +205,41 @@ func (l Level) IsOpaque(x, y int) bool {
 
 func (l *Level) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0, 0, 0, 255})
-	for x := 0; x < l.gd.ScreenWidth; x++ {
-		for y := 0; y < l.gd.ScreenHeight; y++ {
-			isVisible := l.PlayerVisible.IsVisible(x, y)
+	w := l.gd.ScreenWidth
+	h := l.gd.ScreenHeight
+	if l.OffScreen == nil {
+		l.OffScreen = ebiten.NewImage(w*l.gd.TileWidth, h*l.gd.TileHeight)
+	}
+	l.OffScreen.Clear()
+	visible := make([]float32, w*h)
+
+	for x := range w {
+		for y := range h {
 			idx := l.gd.GetIndexFromXY(x, y)
 			tile := l.Tiles[idx]
-			if isVisible {
-				op := &ebiten.DrawImageOptions{}
-				op.GeoM.Translate(float64(tile.PixelX), float64(tile.PixelY))
-				screen.DrawImage(tile.Image, op)
+
+			if l.PlayerVisible.IsVisible(x, y) {
 				l.Tiles[idx].IsRevealed = true
+				visible[y*w+x] = 1.0
 			} else if tile.IsRevealed {
-				op := &ebiten.DrawRectShaderOptions{}
-				op.Images[0] = tile.Image
-				op.GeoM.Translate(float64(tile.PixelX), float64(tile.PixelY))
-				screen.DrawRectShader(tile.Image.Bounds().Dx(), tile.Image.Bounds().Dy(), l.shader, op)
+				visible[y*w+x] = 0.5
+			} else {
+				visible[y*w+x] = 0.0
 			}
+
+			op := &ebiten.DrawImageOptions{}
+			op.GeoM.Translate(float64(tile.PixelX), float64(tile.PixelY))
+			l.OffScreen.DrawImage(tile.Image, op)
 		}
 	}
+
+	shaderOpts := &ebiten.DrawRectShaderOptions{}
+	shaderOpts.Images[0] = l.OffScreen
+	shaderOpts.Uniforms = map[string]interface{}{
+		"Visible":     visible,
+		"ScreenWidth": w,
+	}
+	screen.DrawRectShader(l.OffScreen.Bounds().Dx(), l.OffScreen.Bounds().Dy(), l.shader, shaderOpts)
 }
 
 func max(x, y int) int {
