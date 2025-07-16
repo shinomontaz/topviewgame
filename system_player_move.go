@@ -18,7 +18,7 @@ func TryMovePlayer(g *Game) {
 		if (dx != 0 || dy != 0) && index >= 0 && index < len(level.Tiles) && !level.Tiles[index].Blocked {
 			pos.X = newX
 			pos.Y = newY
-			player.SetMoved()
+			player.SetMoved(dx)
 			hasMoved = true
 		}
 

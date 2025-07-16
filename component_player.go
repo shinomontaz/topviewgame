@@ -23,6 +23,7 @@ type Player struct {
 	frame    int
 	time     float64
 	lastMove float64
+	dir      int
 }
 
 func NewPlayer() *Player {
@@ -48,7 +49,17 @@ func NewPlayer() *Player {
 }
 
 func (p *Player) GetImage() *ebiten.Image {
-	return p.state.GetFrame()
+	frame := p.state.GetFrame()
+	if p.dir == -1 {
+		mirroredFrame := ebiten.NewImage(frame.Bounds().Dx(), frame.Bounds().Dy())
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Scale(-1, 1)
+		op.GeoM.Translate(float64(frame.Bounds().Dx()), 0)
+		mirroredFrame.DrawImage(frame, op)
+		return mirroredFrame
+	}
+
+	return frame
 }
 
 func (p *Player) SetState(newId int) {
@@ -59,8 +70,9 @@ func (p *Player) SetState(newId int) {
 	p.state.Start()
 }
 
-func (p *Player) SetMoved() {
+func (p *Player) SetMoved(dir int) {
 	p.lastMove = 0
+	p.dir = dir
 	p.SetState(state.STAND)
 }
 

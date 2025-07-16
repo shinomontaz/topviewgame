@@ -57,6 +57,10 @@ func NewLevel() Level {
 	return l
 }
 
+func (l *Level) GetDimensions() (int, int) {
+	return l.gd.ScreenWidth, l.gd.ScreenHeight
+}
+
 func (l *Level) GetIndexFromXY(x, y int) int {
 	return l.gd.GetIndexFromXY(x, y)
 }
