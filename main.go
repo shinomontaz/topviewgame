@@ -12,6 +12,7 @@ import (
 
 type controllable interface {
 	GetDirection() (dx, dy int)
+	GetAction() controller.Action
 }
 
 type Game struct {

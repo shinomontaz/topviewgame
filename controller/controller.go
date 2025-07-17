@@ -20,3 +20,19 @@ func (h Human) GetDirection() (int, int) {
 	}
 	return dx, dy
 }
+
+const (
+	ActionNone Action = iota
+	ActionPass
+	ActionAttack
+	ActionPickup
+)
+
+type Action int
+
+func (h Human) GetAction() Action {
+	if ebiten.IsKeyPressed(ebiten.KeySpace) {
+		return ActionPass
+	}
+	return ActionNone
+}

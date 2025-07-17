@@ -13,7 +13,7 @@ func loadImage(name string) (*ebiten.Image, error) {
 	return img, err
 }
 
-func computeMask(x, y int, tiles []MapTile, gd GameData) uint8 {
+func computeMask(x, y int, tiles []*MapTile, gd GameData) uint8 {
 	// Use this order: N, S, E, W, NW, NE, SW, SE
 	neighbors := [8][2]int{
 		{0, -1},  // N

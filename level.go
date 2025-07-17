@@ -29,7 +29,7 @@ type Level struct {
 	Width         int
 	Height        int
 	gd            GameData
-	Tiles         []MapTile
+	Tiles         []*MapTile
 	Rooms         []Rect
 	PlayerVisible *fov.View
 	shader        *ebiten.Shader
@@ -70,11 +70,11 @@ func (l *Level) build() {
 	MAX_SIZE := 10
 	MAX_ROOMS := 30
 
-	l.Tiles = make([]MapTile, l.gd.ScreenWidth*l.gd.ScreenHeight)
+	l.Tiles = make([]*MapTile, l.gd.ScreenWidth*l.gd.ScreenHeight)
 	for x := 0; x < l.gd.ScreenWidth; x++ {
 		for y := 0; y < l.gd.ScreenHeight; y++ {
 			index := l.gd.GetIndexFromXY(x, y)
-			l.Tiles[index] = MapTile{
+			l.Tiles[index] = &MapTile{
 				PixelX:   x * l.gd.TileWidth,
 				PixelY:   y * l.gd.TileHeight,
 				Blocked:  true,
@@ -171,7 +171,7 @@ func (l *Level) adjust() {
 	for x := 0; x < l.gd.ScreenWidth; x++ {
 		for y := 0; y < l.gd.ScreenHeight; y++ {
 			index := l.gd.GetIndexFromXY(x, y)
-			tile := &l.Tiles[index]
+			tile := l.Tiles[index]
 			if !tile.Blocked {
 				tile.Image = imageCache["floor"]
 				continue

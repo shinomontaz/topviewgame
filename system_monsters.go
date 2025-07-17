@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"github.com/norendren/go-fov/fov"
 )
 
@@ -18,12 +16,22 @@ func UpdateMonsters(g *Game) {
 
 	for _, result := range g.World.Query(g.WorldTags["monsters"]) {
 		pos := result.Components[positionC].(*Position)
-		mon := result.Components[monsterC].(*Monster)
+		//		mon := result.Components[monsterC].(*Monster)
 
 		monsterSees := fov.New()
 		monsterSees.Compute(l, pos.X, pos.Y, 7)
 		if monsterSees.IsVisible(playerPosition.X, playerPosition.Y) {
-			log.Printf("%s sees you", mon.GetName())
+			astar := AStar{}
+			path := astar.GetPath(l, pos, &playerPosition)
+			if len(path) > 1 {
+				nextTile := l.Tiles[l.GetIndexFromXY(path[1].X, path[1].Y)]
+				if !nextTile.Blocked {
+					l.Tiles[l.GetIndexFromXY(pos.X, pos.Y)].Blocked = false
+					pos.X = path[1].X
+					pos.Y = path[1].Y
+					l.Tiles[l.GetIndexFromXY(pos.X, pos.Y)].Blocked = true
+				}
+			}
 		}
 	}
 
