@@ -16,13 +16,20 @@ func UpdateMonsters(g *Game) {
 
 	for _, result := range g.World.Query(g.WorldTags["monsters"]) {
 		pos := result.Components[positionC].(*Position)
-		//		mon := result.Components[monsterC].(*Monster)
+		mon := result.Components[monsterC].(*Monster)
 
 		monsterSees := fov.New()
 		monsterSees.Compute(l, pos.X, pos.Y, 7)
 		if monsterSees.IsVisible(playerPosition.X, playerPosition.Y) {
-			astar := AStar{}
-			path := astar.GetPath(l, pos, &playerPosition)
+			var path []Position
+			if mon.LastPlayerPos == playerPosition {
+				path = mon.CachedPath
+			} else {
+				astar := AStar{}
+				path = astar.GetPath(l, pos, &playerPosition)
+			}
+			mon.LastPlayerPos = playerPosition
+			mon.CachedPath = path
 			if len(path) > 1 {
 				nextTile := l.Tiles[l.GetIndexFromXY(path[1].X, path[1].Y)]
 				if !nextTile.Blocked {

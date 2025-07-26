@@ -61,6 +61,10 @@ func (l *Level) GetDimensions() (int, int) {
 	return l.gd.ScreenWidth, l.gd.ScreenHeight
 }
 
+func (l Level) TileAt(x, y int) *MapTile {
+	return l.Tiles[l.GetIndexFromXY(x, y)]
+}
+
 func (l *Level) GetIndexFromXY(x, y int) int {
 	return l.gd.GetIndexFromXY(x, y)
 }

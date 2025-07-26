@@ -16,6 +16,9 @@ type Monster struct {
 	frame    int
 	time     float64
 	lastMove float64
+
+	CachedPath    []Position
+	LastPlayerPos Position
 }
 
 type MonsterType int

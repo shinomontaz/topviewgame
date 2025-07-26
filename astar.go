@@ -23,128 +23,67 @@ type AStar struct {
 }
 
 func (as AStar) GetPath(l Level, start, end *Position) []Position {
-	openList := []*node{}
-	closedList := []*node{}
-	closedmap := make(map[*node]struct{})
-	openmap := make(map[*node]struct{})
+	openList := Heap[*node]{}
+	openMap := map[Position]*node{}
+	closedMap := map[Position]struct{}{}
 
 	startNode := newNode(nil, start)
-	endNode := newNode(nil, end)
+	startNode.g = 0
+	startNode.h = start.GetManhattanDistance(end)
+	startNode.f = startNode.g + startNode.h
 
-	lh, lw := l.GetDimensions()
-
-	openList = append(openList, startNode)
-	openmap[startNode] = struct{}{}
+	openList.Push(startNode.f, startNode)
+	openMap[*start] = startNode
 
 	for {
-		if len(openList) == 0 {
+		currIdx, currNode := openList.Pop()
+		if currIdx == -1 {
 			break
 		}
-		currIdx := 0
-		currNode := openList[currIdx]
+		delete(openMap, *currNode.Pos)
+		closedMap[*currNode.Pos] = struct{}{}
 
-		for idx, item := range openList {
-			if item.f < currNode.f {
-				currNode = item
-				currIdx = idx
-			}
-		}
-
-		openList = append(openList[:currIdx], openList[currIdx+1:]...)
-		delete(openmap, currNode)
-
-		closedList = append(closedList, currNode)
-
-		if currNode.isEqual(endNode) {
+		if currNode.Pos.X == end.X && currNode.Pos.Y == end.Y {
 			path := []Position{}
-			curr := currNode
-			for {
-				if curr == nil {
-					break
-				}
-				path = append(path, *curr.Pos)
-				curr = curr.Parent
+			for n := currNode; n != nil; n = n.Parent {
+				path = append(path, *n.Pos)
+			}
+			// Reverse path
+			for i := 0; i < len(path)/2; i++ {
+				path[i], path[len(path)-1-i] = path[len(path)-1-i], path[i]
 			}
 
-			reversedPath := make([]Position, len(path))
-			for i := len(path) - 1; i >= 0; i-- {
-				reversedPath[len(path)-1-i] = path[i]
-			}
+			return path
 		}
 
-		edges := make([]*node, 0)
+		// Expand neighbors
+		dirs := []Position{{0, -1}, {0, 1}, {-1, 0}, {1, 0}}
+		for _, dir := range dirs {
+			neighbor := Position{X: currNode.Pos.X + dir.X, Y: currNode.Pos.Y + dir.Y}
 
-		if currNode.Pos.Y > 0 {
-			tile := l.Tiles[l.GetIndexFromXY(currNode.Pos.X, currNode.Pos.Y-1)]
-			if tile.TileType != WALL {
-				upNodePos := Position{
-					X: currNode.Pos.X,
-					Y: currNode.Pos.Y - 1,
-				}
-				newNode := newNode(currNode, &upNodePos)
-				edges = append(edges, newNode)
-			}
-		}
-
-		if currNode.Pos.Y < lh {
-			tile := l.Tiles[l.GetIndexFromXY(currNode.Pos.X, currNode.Pos.Y+1)]
-			if tile.TileType != WALL {
-				downNodePos := Position{
-					X: currNode.Pos.X,
-					Y: currNode.Pos.Y + 1,
-				}
-				newNode := newNode(currNode, &downNodePos)
-				edges = append(edges, newNode)
-			}
-		}
-
-		if currNode.Pos.X > 0 {
-			tile := l.Tiles[l.GetIndexFromXY(currNode.Pos.X-1, currNode.Pos.Y)]
-			if tile.TileType != WALL {
-				leftNodePos := Position{
-					X: currNode.Pos.X - 1,
-					Y: currNode.Pos.Y,
-				}
-				newNode := newNode(currNode, &leftNodePos)
-				edges = append(edges, newNode)
-			}
-		}
-		if currNode.Pos.X < lw {
-			tile := l.Tiles[l.GetIndexFromXY(currNode.Pos.X+1, currNode.Pos.Y)]
-			if tile.TileType != WALL {
-				rightNodePos := Position{
-					X: currNode.Pos.X + 1,
-					Y: currNode.Pos.Y,
-				}
-				newNode := newNode(currNode, &rightNodePos)
-				edges = append(edges, newNode)
-			}
-		}
-
-		for _, edge := range edges {
-			if _, ok := closedmap[edge]; ok {
+			if !l.InBounds(neighbor.X, neighbor.Y) || l.TileAt(neighbor.X, neighbor.Y).TileType == WALL {
 				continue
 			}
-			edge.g = currNode.g + 1
-			edge.h = edge.Pos.GetManhattanDistance(endNode.Pos)
-			edge.f = edge.g + edge.h
 
-			if _, ok := openmap[edge]; ok {
-				isFurther := false
-				for _, n := range openList {
-					if edge.g > n.g {
-						isFurther = true
-
-						break
-					}
-				}
-
-				if isFurther {
-					continue
-				}
+			if _, visited := closedMap[neighbor]; visited {
+				continue
 			}
 
-			openList = append(openList, edge)
+			tentativeG := currNode.g + 1
+			existingNode, inOpen := openMap[neighbor]
+
+			if !inOpen || tentativeG < existingNode.g {
+				newN := &node{
+					Parent: currNode,
+					Pos:    &Position{X: neighbor.X, Y: neighbor.Y},
+					g:      tentativeG,
+					h:      neighbor.GetManhattanDistance(end),
+				}
+				newN.f = newN.g + newN.h
+
+				openList.Push(newN.f, newN)
+				openMap[neighbor] = newN
+			}
 		}
 	}
 
