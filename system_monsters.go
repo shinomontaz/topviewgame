@@ -21,6 +21,11 @@ func UpdateMonsters(g *Game) {
 		monsterSees := fov.New()
 		monsterSees.Compute(l, pos.X, pos.Y, 7)
 		if monsterSees.IsVisible(playerPosition.X, playerPosition.Y) {
+			if pos.GetManhattanDistance(&playerPosition) == 1 {
+				ProcessAttacks(g, pos, &playerPosition)
+
+				continue
+			}
 			var path []Position
 			if mon.LastPlayerPos == playerPosition {
 				path = mon.CachedPath

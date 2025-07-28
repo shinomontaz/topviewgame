@@ -56,7 +56,7 @@ func (g *Game) Update() error {
 
 	g.TurnCounter++
 	if g.Turn == PlayerTurn && g.TurnCounter > 10 {
-		TryMovePlayer(g)
+		ProcessPlayer(g)
 	}
 	if g.Turn == EnemyTurn {
 		UpdateMonsters(g)

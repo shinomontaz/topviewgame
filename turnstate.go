@@ -6,6 +6,7 @@ const (
 	BeforePlayerAction TurnState = iota
 	PlayerTurn
 	EnemyTurn
+	GameOver
 )
 
 func GetNextState(state TurnState) TurnState {
@@ -16,6 +17,8 @@ func GetNextState(state TurnState) TurnState {
 		return EnemyTurn
 	case EnemyTurn:
 		return BeforePlayerAction
+	case GameOver:
+		return GameOver
 	default:
 		return PlayerTurn
 	}

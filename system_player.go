@@ -2,7 +2,7 @@ package main
 
 import "topviewgame/controller"
 
-func TryMovePlayer(g *Game) {
+func ProcessPlayer(g *Game) {
 	players := g.WorldTags["players"]
 	level := g.Map.CurrentLevel
 
@@ -18,13 +18,18 @@ func TryMovePlayer(g *Game) {
 		newY := pos.Y + dy
 		index := level.GetIndexFromXY(newX, newY)
 
-		if (dx != 0 || dy != 0) && index >= 0 && index < len(level.Tiles) && !level.Tiles[index].Blocked {
-			level.Tiles[level.GetIndexFromXY(pos.X, pos.Y)].Blocked = false
-			pos.X = newX
-			pos.Y = newY
-			player.SetMoved(dx)
-			hasMoved = true
-			level.Tiles[index].Blocked = true
+		if (dx != 0 || dy != 0) && index >= 0 && index < len(level.Tiles) {
+			if !level.Tiles[index].Blocked {
+				level.Tiles[level.GetIndexFromXY(pos.X, pos.Y)].Blocked = false
+				pos.X = newX
+				pos.Y = newY
+				player.SetMoved(dx)
+				hasMoved = true
+				level.Tiles[index].Blocked = true
+			} else if level.Tiles[index].TileType != WALL {
+				monsterPos := Position{X: newX, Y: newY}
+				ProcessAttacks(g, pos, &monsterPos)
+			}
 		}
 
 		level.PlayerVisible.Compute(level, pos.X, pos.Y, 8)
