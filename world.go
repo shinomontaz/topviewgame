@@ -87,6 +87,10 @@ func InitializeWorld(startingLevel Level) (*ecs.Manager, map[string]ecs.Tag) {
 					MinDamage:  2,
 					MaxDamage:  6,
 					ToHitBonus: 0,
+				}).AddComponent(armorC, &Armor{
+					Name:    "No armor",
+					Defence: 0,
+					Dodge:   5,
 				})
 			} else {
 				ent.AddComponent(healthC, &Health{
@@ -97,6 +101,10 @@ func InitializeWorld(startingLevel Level) (*ecs.Manager, map[string]ecs.Tag) {
 					MinDamage:  1,
 					MaxDamage:  4,
 					ToHitBonus: 1,
+				}).AddComponent(armorC, &Armor{
+					Name:    "Rotten rags",
+					Defence: 1,
+					Dodge:   0,
 				})
 			}
 		}
