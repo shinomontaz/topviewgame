@@ -50,12 +50,14 @@ func NewMonster(t MonsterType) *Monster {
 	specs := []animations.Config{
 		{StateID: state.STAND, FrameCount: 1},
 		{StateID: state.IDLE, FrameCount: 4},
+		{StateID: state.DEATH, FrameCount: 6},
 	}
 
 	animMap := animations.BuildMap(sheet, specs, 48, 48)
 	pl.states = map[int]stater{
 		state.STAND: state.Stand(pl, animMap[state.STAND]),
 		state.IDLE:  state.Idle(pl, animMap[state.IDLE]),
+		state.DEATH: state.Death(pl, animMap[state.DEATH]),
 	}
 
 	pl.SetState(state.STAND)
@@ -85,4 +87,8 @@ func (p *Monster) Update(dt float64) {
 	if nextId, ok := p.state.NextState(); ok && nextId != p.state.GetId() {
 		p.SetState(nextId)
 	}
+}
+
+func (p *Monster) IsDead() bool {
+	return p.state.GetId() == state.DEATH
 }

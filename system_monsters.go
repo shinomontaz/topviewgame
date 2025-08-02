@@ -17,6 +17,9 @@ func UpdateMonsters(g *Game) {
 	for _, result := range g.World.Query(g.WorldTags["monsters"]) {
 		pos := result.Components[positionC].(*Position)
 		mon := result.Components[monsterC].(*Monster)
+		if mon.IsDead() {
+			continue
+		}
 
 		monsterSees := fov.New()
 		monsterSees.Compute(l, pos.X, pos.Y, 7)

@@ -81,7 +81,7 @@ func InitializeWorld(startingLevel Level) (*ecs.Manager, map[string]ecs.Tag) {
 			if monsterType == SKELETON {
 				ent.AddComponent(healthC, &Health{
 					Max:     10,
-					Current: 10,
+					Current: 2,
 				}).AddComponent(meleeWeaponC, &MeleeWeapon{
 					Name:       "Short Sword",
 					MinDamage:  2,
@@ -95,7 +95,7 @@ func InitializeWorld(startingLevel Level) (*ecs.Manager, map[string]ecs.Tag) {
 			} else {
 				ent.AddComponent(healthC, &Health{
 					Max:     20,
-					Current: 20,
+					Current: 2,
 				}).AddComponent(meleeWeaponC, &MeleeWeapon{
 					Name:       "Khopesh",
 					MinDamage:  1,

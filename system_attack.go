@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"topviewgame/state"
 
 	"github.com/bytearena/ecs"
 )
@@ -22,6 +23,9 @@ func ProcessAttacks(g *Game, attPos, defPos *Position) {
 	}
 
 	for _, cbt := range g.World.Query(g.WorldTags["monsters"]) {
+		if cbt.Components[monsterC].(*Monster).IsDead() {
+			continue
+		}
 		pos := cbt.Components[positionC].(*Position)
 		if pos.IsEqual(attPos) {
 			attacker = cbt
@@ -40,6 +44,10 @@ func ProcessAttacks(g *Game, attPos, defPos *Position) {
 	attackerWeapon := attacker.Components[meleeWeaponC].(*MeleeWeapon)
 	attackerName := attacker.Components[nameC].(*Name).Label
 
+	if attacker.Components[healthC].(*Health).Current <= 0 {
+		return
+	}
+
 	toHitRoll := GetDiceRoll(10)
 
 	if toHitRoll+attackerWeapon.ToHitBonus > defenderArmor.Dodge {
@@ -55,12 +63,21 @@ func ProcessAttacks(g *Game, attPos, defPos *Position) {
 		fmt.Println(attackerName, "hit", defenderName, "for", damageDone, "damage")
 
 		if defenderHealth.Current <= 0 {
-			fmt.Println(defenderName, "is dead")
 			if defenderName == "Player" {
 				fmt.Println("You died!")
 				g.Turn = GameOver
+
+				return
 			}
-			g.World.DisposeEntity(defender.Entity)
+
+			fmt.Println(defenderName, "is dead")
+
+			//			g.World.DisposeEntity(defender.Entity)
+
+			l := g.Map.CurrentLevel
+			t := l.Tiles[l.GetIndexFromXY(defPos.X, defPos.Y)]
+			t.Blocked = false
+			defender.Components[monsterC].(*Monster).SetState(state.DEATH)
 		}
 	} else {
 		fmt.Println(attackerName, "missed", defenderName)
