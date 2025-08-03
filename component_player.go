@@ -36,12 +36,18 @@ func NewPlayer() *Player {
 	specs := []animations.Config{
 		{StateID: state.STAND, FrameCount: 1},
 		{StateID: state.IDLE, FrameCount: 4},
+		{StateID: state.ATTACK, FrameCount: 6},
+		{StateID: state.DEATH, FrameCount: 4},
+		{StateID: state.WALK, FrameCount: 6},
 	}
 
 	animMap := animations.BuildMap(sheet, specs, 48, 48)
 	pl.states = map[int]stater{
-		state.STAND: state.Stand(pl, animMap[state.STAND]),
-		state.IDLE:  state.Idle(pl, animMap[state.IDLE]),
+		state.STAND:  state.Stand(pl, animMap[state.STAND]),
+		state.IDLE:   state.Idle(pl, animMap[state.IDLE]),
+		state.DEATH:  state.Death(pl, animMap[state.DEATH]),
+		state.ATTACK: state.Attack(pl, animMap[state.ATTACK]),
+		state.WALK:   state.Attack(pl, animMap[state.WALK]),
 	}
 
 	pl.SetState(state.STAND)
@@ -74,6 +80,12 @@ func (p *Player) SetMoved(dir int) {
 	p.lastMove = 0
 	p.dir = dir
 	p.SetState(state.STAND)
+}
+
+func (p *Player) SetAttacking(dir int) {
+	p.lastMove = 0
+	p.dir = dir
+	p.SetState(state.ATTACK)
 }
 
 func (p *Player) Update(dt float64) {

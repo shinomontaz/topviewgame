@@ -28,6 +28,7 @@ func ProcessPlayer(g *Game) {
 				level.Tiles[index].Blocked = true
 			} else if level.Tiles[index].TileType != WALL {
 				monsterPos := Position{X: newX, Y: newY}
+				player.SetAttacking(dx)
 				ProcessAttacks(g, pos, &monsterPos)
 				hasMoved = true
 			}

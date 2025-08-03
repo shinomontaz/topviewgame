@@ -36,9 +36,9 @@ type Level struct {
 	OffScreen     *ebiten.Image
 }
 
-func NewLevel() Level {
+func NewLevel(gd GameData) Level {
 	l := Level{
-		gd:            NewGameData(),
+		gd:            gd,
 		PlayerVisible: fov.New(),
 	}
 	l.build()

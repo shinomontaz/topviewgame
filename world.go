@@ -13,6 +13,7 @@ var (
 	meleeWeaponC *ecs.Component
 	armorC       *ecs.Component
 	nameC        *ecs.Component
+	userMessage  *ecs.Component
 )
 
 func InitializeWorld(startingLevel Level) (*ecs.Manager, map[string]ecs.Tag) {
@@ -28,6 +29,8 @@ func InitializeWorld(startingLevel Level) (*ecs.Manager, map[string]ecs.Tag) {
 	meleeWeaponC = manager.NewComponent()
 	armorC = manager.NewComponent()
 	nameC = manager.NewComponent()
+
+	userMessage = manager.NewComponent()
 
 	startingRoom := startingLevel.Rooms[0]
 	playerX, playerY := startingRoom.Center()
@@ -51,7 +54,12 @@ func InitializeWorld(startingLevel Level) (*ecs.Manager, map[string]ecs.Tag) {
 			Defence: 1,
 			Dodge:   1,
 		}).
-		AddComponent(nameC, &Name{Label: "Player"})
+		AddComponent(nameC, &Name{Label: "Player"}).
+		AddComponent(userMessage, &UserMessage{
+			AttackMessage:    "",
+			DeadMessage:      "",
+			GameStateMessage: "",
+		})
 
 	for _, room := range startingLevel.Rooms {
 		if room.X1 != startingRoom.X1 {
@@ -76,7 +84,12 @@ func InitializeWorld(startingLevel Level) (*ecs.Manager, map[string]ecs.Tag) {
 					X: mX,
 					Y: mY,
 				}).
-				AddComponent(nameC, &Name{Label: monsterName})
+				AddComponent(nameC, &Name{Label: monsterName}).
+				AddComponent(userMessage, &UserMessage{
+					AttackMessage:    "",
+					DeadMessage:      "",
+					GameStateMessage: "",
+				})
 
 			if monsterType == SKELETON {
 				ent.AddComponent(healthC, &Health{
@@ -110,14 +123,17 @@ func InitializeWorld(startingLevel Level) (*ecs.Manager, map[string]ecs.Tag) {
 		}
 	}
 
-	monsters := ecs.BuildTag(monsterC, positionC, healthC, meleeWeaponC, armorC, nameC)
+	monsters := ecs.BuildTag(monsterC, positionC, healthC, meleeWeaponC, armorC, nameC, userMessage)
 	tags["monsters"] = monsters
 
-	players := ecs.BuildTag(playerC, positionC, healthC, meleeWeaponC, armorC, nameC)
+	players := ecs.BuildTag(playerC, positionC, healthC, meleeWeaponC, armorC, nameC, userMessage)
 	tags["players"] = players
 
 	renderables := ecs.BuildTag(renderableC, positionC)
 	tags["renderables"] = renderables
+
+	messengers := ecs.BuildTag(userMessage)
+	tags["messengers"] = messengers
 
 	return manager, tags
 }

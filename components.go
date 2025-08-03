@@ -48,3 +48,9 @@ type Armor struct {
 	Dodge   int
 	Block   int
 }
+
+type UserMessage struct {
+	AttackMessage    string
+	DeadMessage      string
+	GameStateMessage string
+}

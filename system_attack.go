@@ -43,9 +43,17 @@ func ProcessAttacks(g *Game, attPos, defPos *Position) {
 	defenderName := defender.Components[nameC].(*Name).Label
 	attackerWeapon := attacker.Components[meleeWeaponC].(*MeleeWeapon)
 	attackerName := attacker.Components[nameC].(*Name).Label
+	defenderMessage := defender.Components[userMessage].(*UserMessage)
+	attackerMessage := attacker.Components[userMessage].(*UserMessage)
 
 	if attacker.Components[healthC].(*Health).Current <= 0 {
 		return
+	}
+
+	if defenderName == "Player" {
+		defender.Components[playerC].(*Player).SetState(state.STAND)
+	} else {
+		defender.Components[monsterC].(*Monster).SetState(state.STAND)
 	}
 
 	toHitRoll := GetDiceRoll(10)
@@ -60,17 +68,15 @@ func ProcessAttacks(g *Game, attPos, defPos *Position) {
 
 		defenderHealth.Current -= damageDone
 
-		fmt.Println(attackerName, "hit", defenderName, "for", damageDone, "damage")
-
+		attackerMessage.AttackMessage = fmt.Sprintf("%s hit %s for %d damage\n", attackerName, defenderName, damageDone)
 		if defenderHealth.Current <= 0 {
 			if defenderName == "Player" {
-				fmt.Println("You died!")
+				defenderMessage.GameStateMessage = "Game Over!\n"
 				g.Turn = GameOver
 
 				return
 			}
-
-			fmt.Println(defenderName, "is dead")
+			defenderMessage.DeadMessage = fmt.Sprintf("%s is dead\n", defenderName)
 
 			//			g.World.DisposeEntity(defender.Entity)
 
@@ -80,6 +86,6 @@ func ProcessAttacks(g *Game, attPos, defPos *Position) {
 			defender.Components[monsterC].(*Monster).SetState(state.DEATH)
 		}
 	} else {
-		fmt.Println(attackerName, "missed", defenderName)
+		attackerMessage.AttackMessage = fmt.Sprintf("%s missed %s", attackerName, defenderName)
 	}
 }

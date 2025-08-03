@@ -1,15 +1,19 @@
 package main
 
 import (
+	"topviewgame/state"
+
 	"github.com/norendren/go-fov/fov"
 )
 
 func UpdateMonsters(g *Game) {
 	l := g.Map.CurrentLevel
 	playerPosition := Position{}
+	var player *Player
 
 	for _, plr := range g.World.Query(g.WorldTags["players"]) {
 		pos := plr.Components[positionC].(*Position)
+		player = plr.Components[playerC].(*Player)
 		playerPosition.X = pos.X
 		playerPosition.Y = pos.Y
 	}
@@ -25,7 +29,10 @@ func UpdateMonsters(g *Game) {
 		monsterSees.Compute(l, pos.X, pos.Y, 7)
 		if monsterSees.IsVisible(playerPosition.X, playerPosition.Y) {
 			if pos.GetManhattanDistance(&playerPosition) == 1 {
+				player.SetState(state.STAND)
 				ProcessAttacks(g, pos, &playerPosition)
+				dx := playerPosition.X - pos.X
+				mon.SetAttacking(dx)
 				if result.Components[healthC].(*Health).Current <= 0 {
 					t := l.Tiles[l.GetIndexFromXY(pos.X, pos.Y)]
 					t.Blocked = false

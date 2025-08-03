@@ -24,10 +24,12 @@ type Game struct {
 	dt               float64
 	last             time.Time
 	PlayerController controllable
+	gd               *GameData
 }
 
 func NewGame() *Game {
-	m := NewGameMap()
+	gd := NewGameData()
+	m := NewGameMap(gd)
 	world, tags := InitializeWorld(m.CurrentLevel)
 
 	return &Game{
@@ -38,14 +40,16 @@ func NewGame() *Game {
 		Turn:             PlayerTurn,
 		TurnCounter:      0,
 		last:             time.Now(),
+		gd:               &gd,
 	}
+}
 
+func (g *Game) GetData() *GameData {
+	return g.gd
 }
 
 func (g *Game) Layout(w, h int) (int, int) {
-	gd := NewGameData()
-
-	return gd.TileHeight * gd.ScreenWidth, gd.TileWidth * gd.ScreenHeight
+	return g.gd.TileHeight * g.gd.ScreenWidth, g.gd.TileWidth * (g.gd.ScreenHeight + g.gd.UIHeight)
 }
 
 func (g *Game) Update() error {
@@ -72,6 +76,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	level.Draw(screen)
 
 	ProcessRenderables(g, level, screen)
+	ProcessUserLog(g, screen)
 }
 
 func main() {

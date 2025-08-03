@@ -15,6 +15,7 @@ type Monster struct {
 	frame    int
 	time     float64
 	lastMove float64
+	dir      int
 
 	CachedPath    []Position
 	LastPlayerPos Position
@@ -51,13 +52,17 @@ func NewMonster(t MonsterType) *Monster {
 		{StateID: state.STAND, FrameCount: 1},
 		{StateID: state.IDLE, FrameCount: 4},
 		{StateID: state.DEATH, FrameCount: 6},
+		{StateID: state.ATTACK, FrameCount: 6},
+		{StateID: state.WALK, FrameCount: 6},
 	}
 
 	animMap := animations.BuildMap(sheet, specs, 48, 48)
 	pl.states = map[int]stater{
-		state.STAND: state.Stand(pl, animMap[state.STAND]),
-		state.IDLE:  state.Idle(pl, animMap[state.IDLE]),
-		state.DEATH: state.Death(pl, animMap[state.DEATH]),
+		state.STAND:  state.Stand(pl, animMap[state.STAND]),
+		state.IDLE:   state.Idle(pl, animMap[state.IDLE]),
+		state.DEATH:  state.Death(pl, animMap[state.DEATH]),
+		state.ATTACK: state.Attack(pl, animMap[state.ATTACK]),
+		state.WALK:   state.Attack(pl, animMap[state.WALK]),
 	}
 
 	pl.SetState(state.STAND)
@@ -79,6 +84,12 @@ func (p *Monster) SetState(newId int) {
 func (p *Monster) SetMoved() {
 	p.lastMove = 0
 	p.SetState(state.STAND)
+}
+
+func (p *Monster) SetAttacking(dir int) {
+	p.lastMove = 0
+	p.dir = dir
+	p.SetState(state.ATTACK)
 }
 
 func (p *Monster) Update(dt float64) {
