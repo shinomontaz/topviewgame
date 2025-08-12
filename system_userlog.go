@@ -84,7 +84,11 @@ func ProcessUserLog(g *Game, screen *ebiten.Image) {
 
 	}
 	if anyMessages {
-		lastText = tmpMessages
+		if len(lastText) > 0 && len(lastText)+len(tmpMessages) > 5 {
+			lastText = lastText[len(lastText)-len(tmpMessages):]
+		}
+
+		lastText = append(lastText, tmpMessages...)
 	}
 	for _, msg := range lastText {
 		if msg != "" {
