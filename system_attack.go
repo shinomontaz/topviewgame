@@ -78,8 +78,6 @@ func ProcessAttacks(g *Game, attPos, defPos *Position) {
 			}
 			defenderMessage.DeadMessage = fmt.Sprintf("%s is dead\n", defenderName)
 
-			//			g.World.DisposeEntity(defender.Entity)
-
 			l := g.Map.CurrentLevel
 			t := l.Tiles[l.GetIndexFromXY(defPos.X, defPos.Y)]
 			t.Blocked = false

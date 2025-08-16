@@ -3,10 +3,8 @@ package main
 import (
 	"image/color"
 	"log"
-	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/opentype"
@@ -21,25 +19,21 @@ var (
 
 func ProcessUserLog(g *Game, screen *ebiten.Image) {
 	if userLogImg == nil {
-		userLogImg, _, err = ebitenutil.NewImageFromFile("assets/Back3.png")
+		gd := g.GetData()
+		userLogImg, err = createBorder(gd.ScreenWidth/2, gd.UIHeight, gd.TileWidth)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 
 	if mplusNormalFont == nil {
-		fontBytes, err := os.ReadFile("assets/fonts/ExpressionPro.ttf")
-		if err != nil {
-			log.Fatalf("failed to read font file: %v", err)
-		}
-		tt, err := opentype.Parse(fontBytes)
-
 		const dpi = 72
-		mplusNormalFont, err = opentype.NewFace(tt, &opentype.FaceOptions{
+		opts := opentype.FaceOptions{
 			Size:    24,
 			DPI:     dpi,
 			Hinting: font.HintingFull,
-		})
+		}
+		mplusNormalFont, err = loadFont("assets/fonts/ExpressionPro.ttf", &opts)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -50,13 +44,6 @@ func ProcessUserLog(g *Game, screen *ebiten.Image) {
 	var fontX = 16
 	var fontY = uiLocation + 24
 	op := &ebiten.DrawImageOptions{}
-	screenW := screen.Bounds().Dx()
-	imgW, imgH := userLogImg.Bounds().Dx(), userLogImg.Bounds().Dy()
-
-	scaleX := float64(screenW) / float64(imgW)
-	scaleY := float64(gd.UIHeight*gd.TileHeight) / float64(imgH)
-
-	op.GeoM.Scale(scaleX, scaleY)
 	op.GeoM.Translate(float64(0.), float64(uiLocation))
 	screen.DrawImage(userLogImg, op)
 

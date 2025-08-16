@@ -77,6 +77,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	ProcessRenderables(g, level, screen)
 	ProcessUserLog(g, screen)
+	ProcessHUD(g, screen)
 }
 
 func main() {
