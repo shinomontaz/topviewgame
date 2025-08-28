@@ -3,6 +3,10 @@ package main
 import "github.com/hajimehoshi/ebiten/v2"
 
 func ProcessRenderables(g *Game, l Level, screen *ebiten.Image, viewport Rect) {
+	tileSize := 32
+	offsetX := float64(viewport.X1 * tileSize)
+	offsetY := float64(viewport.Y1 * tileSize)
+
 	for _, result := range g.World.Query(g.WorldTags["renderables"]) {
 		pos := result.Components[positionC].(*Position)
 		img := result.Components[renderableC].(Renderable).GetImage()
@@ -13,10 +17,13 @@ func ProcessRenderables(g *Game, l Level, screen *ebiten.Image, viewport Rect) {
 
 			op := &ebiten.DrawImageOptions{}
 
-			offsetX := float64((48 - 32) / 2)
-			offsetY := float64(48 - 32) // align bottom of sprite with bottom of tile
+			localX := float64(tile.PixelX) - offsetX
+			localY := float64(tile.PixelY) - offsetY
 
-			op.GeoM.Translate(float64(tile.PixelX)-offsetX, float64(tile.PixelY)-offsetY)
+			spriteOffsetX := float64((tileSize - 32) / 2)
+			spriteOffsetY := float64(tileSize - 32) // align bottom of sprite with bottom of tile
+
+			op.GeoM.Translate(localX-spriteOffsetX, localY-spriteOffsetY)
 			screen.DrawImage(img, op)
 		}
 	}

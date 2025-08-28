@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image/color"
 	"log"
-	"math"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -215,43 +214,58 @@ func (l Level) IsOpaque(x, y int) bool {
 
 func (l *Level) Draw(screen *ebiten.Image, viewport Rect) {
 	screen.Fill(color.RGBA{0, 0, 0, 255})
-	w := l.gd.ScreenWidth
-	h := l.gd.ScreenHeight
-	if l.OffScreen == nil {
-		l.OffScreen = ebiten.NewImage(w*l.gd.TileWidth, h*l.gd.TileHeight)
+
+	vw := l.gd.ScreenWidth // viewport size in tiles
+	vh := l.gd.ScreenHeight
+	tw := l.gd.TileWidth
+	th := l.gd.TileHeight
+
+	if l.OffScreen == nil || l.OffScreen.Bounds().Dx() != vw*tw || l.OffScreen.Bounds().Dy() != vh*th {
+		l.OffScreen = ebiten.NewImage(vw*tw, vh*th)
 	}
 	l.OffScreen.Clear()
-	visible := make([]float32, w*h)
 
-	fmt.Println("viewport:", viewport)
-	x1 := int(math.Max(float64(viewport.X1), 0))
-	x2 := int(math.Min(float64(viewport.X2), float64(l.gd.MapWidth)))
-	y1 := int(math.Max(float64(viewport.Y1), 0))
-	y2 := int(math.Min(float64(viewport.Y2), float64(l.gd.MapHeight)))
+	visible := make([]float32, vw*vh)
 
-	for x := x1; x < x2; x++ {
-		for y := y1; y < y2; y++ {
-			idx := l.gd.GetIndexFromXY(x, y)
-			fmt.Println(x, y, x1, x2, y1, y2, idx)
-			tile := l.Tiles[idx]
-			fmt.Println(tile)
+	baseX := viewport.X1
+	baseY := viewport.Y1
 
-			tileRect := NewRect(x, y, 1, 1)
+	// clamp draw loop
+	x1 := max(0, viewport.X1)
+	y1 := max(0, viewport.Y1)
+	x2 := min(l.gd.MapWidth, viewport.X2)
+	y2 := min(l.gd.MapHeight, viewport.Y2)
 
-			if tileRect.Intersect(viewport) {
-				if l.PlayerVisible.IsVisible(x, y) {
-					l.Tiles[idx].IsRevealed = true
-					visible[(y-y1)*w+(x-x1)] = 1.0
-				} else if tile.IsRevealed {
-					visible[(y-y1)*w+(x-x1)] = 0.5
-				} else {
-					visible[(y-y1)*w+(x-x1)] = 0.0
-				}
+	for y := y1; y < y2; y++ {
+		for x := x1; x < x2; x++ {
+			dx := x - baseX
+			dy := y - baseY
 
-				op := &ebiten.DrawImageOptions{}
-				op.GeoM.Translate(float64(tile.PixelX), float64(tile.PixelY))
-				l.OffScreen.DrawImage(tile.Image, op)
+			if dx < 0 || dx >= vw || dy < 0 || dy >= vh {
+				continue
 			}
+
+			idx := l.gd.GetIndexFromXY(x, y)
+			tile := l.Tiles[idx]
+
+			if l.PlayerVisible.IsVisible(x, y) {
+				tile.IsRevealed = true
+				visible[dy*vw+dx] = 1.0
+			} else if tile.IsRevealed {
+				visible[dy*vw+dx] = 0.5
+			} else {
+				visible[dy*vw+dx] = 0.0
+			}
+
+			// DEBUG: log first few
+			if dx == vw/2 && dy == vh/2 {
+				fmt.Printf("Center tile map=(%d,%d) local=(%d,%d) pixel=(%d,%d)\n",
+					x, y, dx, dy, dx*tw, dy*th)
+			}
+
+			op := &ebiten.DrawImageOptions{}
+			op.GeoM.Translate(float64(dx*tw), float64(dy*th))
+			l.OffScreen.DrawImage(tile.Image, op)
 		}
 	}
 
@@ -259,7 +273,9 @@ func (l *Level) Draw(screen *ebiten.Image, viewport Rect) {
 	shaderOpts.Images[0] = l.OffScreen
 	shaderOpts.Uniforms = map[string]interface{}{
 		"Visible":     visible,
-		"ScreenWidth": w,
+		"ScreenWidth": vw,
+		"TileWidth":   tw, // new
+		"TileHeight":  th, // new
 	}
 	screen.DrawRectShader(l.OffScreen.Bounds().Dx(), l.OffScreen.Bounds().Dy(), l.shader, shaderOpts)
 }
