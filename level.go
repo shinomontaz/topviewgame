@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"log"
 	"os"
@@ -211,7 +212,7 @@ func (l Level) IsOpaque(x, y int) bool {
 	return l.Tiles[l.GetIndexFromXY(x, y)].TileType == WALL
 }
 
-func (l *Level) Draw(screen *ebiten.Image) {
+func (l *Level) Draw(screen *ebiten.Image, viewport Rect) {
 	screen.Fill(color.RGBA{0, 0, 0, 255})
 	w := l.gd.ScreenWidth
 	h := l.gd.ScreenHeight
@@ -221,23 +222,28 @@ func (l *Level) Draw(screen *ebiten.Image) {
 	l.OffScreen.Clear()
 	visible := make([]float32, w*h)
 
+	fmt.Println("viewport:", viewport)
+
 	for x := range w {
 		for y := range h {
 			idx := l.gd.GetIndexFromXY(x, y)
 			tile := l.Tiles[idx]
+			tileRect := NewRect(x, y, 1, 1)
 
-			if l.PlayerVisible.IsVisible(x, y) {
-				l.Tiles[idx].IsRevealed = true
-				visible[y*w+x] = 1.0
-			} else if tile.IsRevealed {
-				visible[y*w+x] = 0.5
-			} else {
-				visible[y*w+x] = 0.0
+			if tileRect.Intersect(viewport) {
+				if l.PlayerVisible.IsVisible(x, y) {
+					l.Tiles[idx].IsRevealed = true
+					visible[y*w+x] = 1.0
+				} else if tile.IsRevealed {
+					visible[y*w+x] = 0.5
+				} else {
+					visible[y*w+x] = 0.0
+				}
+
+				op := &ebiten.DrawImageOptions{}
+				op.GeoM.Translate(float64(tile.PixelX), float64(tile.PixelY))
+				l.OffScreen.DrawImage(tile.Image, op)
 			}
-
-			op := &ebiten.DrawImageOptions{}
-			op.GeoM.Translate(float64(tile.PixelX), float64(tile.PixelY))
-			l.OffScreen.DrawImage(tile.Image, op)
 		}
 	}
 

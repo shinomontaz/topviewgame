@@ -2,7 +2,7 @@ package main
 
 import "github.com/hajimehoshi/ebiten/v2"
 
-func ProcessRenderables(g *Game, l Level, screen *ebiten.Image) {
+func ProcessRenderables(g *Game, l Level, screen *ebiten.Image, viewport Rect) {
 	for _, result := range g.World.Query(g.WorldTags["renderables"]) {
 		pos := result.Components[positionC].(*Position)
 		img := result.Components[renderableC].(Renderable).GetImage()
