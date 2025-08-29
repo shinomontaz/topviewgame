@@ -3,12 +3,14 @@ package main
 
 var Visible [1000]float
 var ScreenWidth int
+var TileWidth int
+var TileHeight int
 
 func Fragment(pos vec4, uv vec2, _ vec4) vec4 {
     color := imageSrc0At(uv).rgba
 
-    tileX := int(floor(pos.x / 32.0))
-    tileY := int(floor(pos.y / 32.0))
+    tileX := int(floor(pos.x / float(TileWidth)))
+    tileY := int(floor(pos.y / float(TileHeight)))
     index := tileY * ScreenWidth + tileX
 
 	if index < 0 || index >= len(Visible) {

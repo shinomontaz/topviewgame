@@ -25,6 +25,7 @@ type Game struct {
 	last             time.Time
 	PlayerController controllable
 	gd               *GameData
+	Center           Position
 }
 
 func NewGame() *Game {
@@ -41,6 +42,7 @@ func NewGame() *Game {
 		TurnCounter:      0,
 		last:             time.Now(),
 		gd:               &gd,
+		Center:           GetCenter(world, tags["players"]),
 	}
 }
 
@@ -72,10 +74,21 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	level := g.Map.CurrentLevel
-	level.Draw(screen)
+	g.Center = GetCenter(g.World, g.WorldTags["players"])
+	playerX, playerY := g.Center.X, g.Center.Y
 
-	ProcessRenderables(g, level, screen)
+	// Calculate the viewport bounds
+	viewport := Rect{
+		X1: playerX - g.gd.ScreenWidth/2,
+		Y1: playerY - g.gd.ScreenHeight/2,
+		X2: playerX + g.gd.ScreenWidth/2,
+		Y2: playerY + g.gd.ScreenHeight/2,
+	}
+
+	level := g.Map.CurrentLevel
+	level.Draw(screen, viewport) //viewportLeft, viewportTop, viewportRight, viewportBottom)
+
+	ProcessRenderables(g, level, screen, viewport) //Left, viewportTop, viewportRight, viewportBottom)
 	ProcessUserLog(g, screen)
 	ProcessHUD(g, screen)
 }

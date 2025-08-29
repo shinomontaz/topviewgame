@@ -16,6 +16,15 @@ var (
 	userMessage  *ecs.Component
 )
 
+func GetCenter(w *ecs.Manager, t ecs.Tag) Position {
+	for _, player := range w.Query(t) {
+		pos := player.Components[positionC].(*Position)
+		return *pos
+	}
+
+	return Position{}
+}
+
 func InitializeWorld(startingLevel Level) (*ecs.Manager, map[string]ecs.Tag) {
 	tags := make(map[string]ecs.Tag)
 	manager := ecs.NewManager()

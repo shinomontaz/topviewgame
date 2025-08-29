@@ -30,7 +30,7 @@ func computeMask(x, y int, tiles []*MapTile, gd GameData) uint8 {
 	for bit, delta := range neighbors {
 		nx, ny := x+delta[0], y+delta[1]
 		wall := false
-		if nx < 0 || nx >= gd.ScreenWidth || ny < 0 || ny >= gd.ScreenHeight {
+		if nx < 0 || nx >= gd.MapWidth || ny < 0 || ny >= gd.MapHeight {
 			wall = true
 		} else {
 			nIdx := gd.GetIndexFromXY(nx, ny)
