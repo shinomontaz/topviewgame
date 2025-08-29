@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"image/color"
 	"log"
 	"os"
@@ -215,7 +214,7 @@ func (l Level) IsOpaque(x, y int) bool {
 func (l *Level) Draw(screen *ebiten.Image, viewport Rect) {
 	screen.Fill(color.RGBA{0, 0, 0, 255})
 
-	vw := l.gd.ScreenWidth // viewport size in tiles
+	vw := l.gd.ScreenWidth
 	vh := l.gd.ScreenHeight
 	tw := l.gd.TileWidth
 	th := l.gd.TileHeight
@@ -230,7 +229,6 @@ func (l *Level) Draw(screen *ebiten.Image, viewport Rect) {
 	baseX := viewport.X1
 	baseY := viewport.Y1
 
-	// clamp draw loop
 	x1 := max(0, viewport.X1)
 	y1 := max(0, viewport.Y1)
 	x2 := min(l.gd.MapWidth, viewport.X2)
@@ -257,12 +255,6 @@ func (l *Level) Draw(screen *ebiten.Image, viewport Rect) {
 				visible[dy*vw+dx] = 0.0
 			}
 
-			// DEBUG: log first few
-			if dx == vw/2 && dy == vh/2 {
-				fmt.Printf("Center tile map=(%d,%d) local=(%d,%d) pixel=(%d,%d)\n",
-					x, y, dx, dy, dx*tw, dy*th)
-			}
-
 			op := &ebiten.DrawImageOptions{}
 			op.GeoM.Translate(float64(dx*tw), float64(dy*th))
 			l.OffScreen.DrawImage(tile.Image, op)
@@ -274,8 +266,8 @@ func (l *Level) Draw(screen *ebiten.Image, viewport Rect) {
 	shaderOpts.Uniforms = map[string]interface{}{
 		"Visible":     visible,
 		"ScreenWidth": vw,
-		"TileWidth":   tw, // new
-		"TileHeight":  th, // new
+		"TileWidth":   tw,
+		"TileHeight":  th,
 	}
 	screen.DrawRectShader(l.OffScreen.Bounds().Dx(), l.OffScreen.Bounds().Dy(), l.shader, shaderOpts)
 }
