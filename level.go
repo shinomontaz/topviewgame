@@ -272,6 +272,26 @@ func (l *Level) Draw(screen *ebiten.Image, viewport Rect) {
 	screen.DrawRectShader(l.OffScreen.Bounds().Dx(), l.OffScreen.Bounds().Dy(), l.shader, shaderOpts)
 }
 
+func (l *Level) ClosestVisibleOnLine(a, b Position) Position {
+	line := TileLine(a.X, a.Y, b.X, b.Y)
+
+	var lastVisible Position
+	for _, p := range line {
+		idx := l.gd.GetIndexFromXY(p.X, p.Y)
+		if idx < 0 || idx >= len(l.Tiles) {
+			continue
+		}
+
+		tile := l.Tiles[idx]
+		if tile.IsRevealed {
+			lastVisible = p
+
+			break
+		}
+	}
+	return lastVisible
+}
+
 func max(x, y int) int {
 	if x < y {
 		return y

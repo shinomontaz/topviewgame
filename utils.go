@@ -6,9 +6,16 @@ import (
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/opentype"
 )
+
+func loadImage(name string) (*ebiten.Image, error) {
+	img, _, err := ebitenutil.NewImageFromFile(fmt.Sprintf("assets/tiles/%s.png", name))
+
+	return img, err
+}
 
 type Heap[T any] struct {
 	list []int
@@ -133,4 +140,44 @@ func createBorder(tileW, tileH, tileSize int) (*ebiten.Image, error) {
 	}
 
 	return img, nil
+}
+
+func TileLine(x0, y0, x1, y1 int) []Position {
+	var result []Position
+	dx := abs(x1 - x0)
+	dy := -abs(y1 - y0)
+	sx := -1
+	if x0 < x1 {
+		sx = 1
+	}
+	sy := -1
+	if y0 < y1 {
+		sy = 1
+	}
+	err := dx + dy
+
+	x, y := x0, y0
+	for {
+		result = append(result, Position{X: x, Y: y})
+		if x == x1 && y == y1 {
+			break
+		}
+		e2 := 2 * err
+		if e2 >= dy {
+			err += dy
+			x += sx
+		}
+		if e2 <= dx {
+			err += dx
+			y += sy
+		}
+	}
+	return result
+}
+
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
 }

@@ -13,6 +13,8 @@ import (
 type controllable interface {
 	GetDirection() (dx, dy int)
 	GetAction() controller.Action
+	GetMouseScreenTile() (int, int)
+	Draw(screen *ebiten.Image)
 }
 
 type Game struct {
@@ -26,6 +28,7 @@ type Game struct {
 	PlayerController controllable
 	gd               *GameData
 	Center           Position
+	viewport         Rect
 }
 
 func NewGame() *Game {
@@ -34,7 +37,7 @@ func NewGame() *Game {
 	world, tags := InitializeWorld(m.CurrentLevel)
 
 	return &Game{
-		PlayerController: controller.Human{},
+		PlayerController: controller.Human{TileWidth: gd.TileWidth, TileHeight: gd.TileHeight},
 		Map:              m,
 		World:            world,
 		WorldTags:        tags,
@@ -42,7 +45,17 @@ func NewGame() *Game {
 		TurnCounter:      0,
 		last:             time.Now(),
 		gd:               &gd,
-		Center:           GetCenter(world, tags["players"]),
+	}
+}
+
+func (g *Game) SetCenter(pos Position) {
+	g.Center = pos
+	playerX, playerY := g.Center.X, g.Center.Y
+	g.viewport = Rect{
+		X1: playerX - g.gd.ScreenWidth/2,
+		Y1: playerY - g.gd.ScreenHeight/2,
+		X2: playerX + g.gd.ScreenWidth/2,
+		Y2: playerY + g.gd.ScreenHeight/2,
 	}
 }
 
@@ -73,24 +86,18 @@ func (g *Game) Update() error {
 	return nil
 }
 
+func (g *Game) GetViewport() Rect {
+	return g.viewport
+}
+
 func (g *Game) Draw(screen *ebiten.Image) {
-	g.Center = GetCenter(g.World, g.WorldTags["players"])
-	playerX, playerY := g.Center.X, g.Center.Y
-
-	// Calculate the viewport bounds
-	viewport := Rect{
-		X1: playerX - g.gd.ScreenWidth/2,
-		Y1: playerY - g.gd.ScreenHeight/2,
-		X2: playerX + g.gd.ScreenWidth/2,
-		Y2: playerY + g.gd.ScreenHeight/2,
-	}
-
 	level := g.Map.CurrentLevel
-	level.Draw(screen, viewport) //viewportLeft, viewportTop, viewportRight, viewportBottom)
+	level.Draw(screen, g.viewport)
 
-	ProcessRenderables(g, level, screen, viewport) //Left, viewportTop, viewportRight, viewportBottom)
+	ProcessRenderables(g, level, screen, g.viewport)
 	ProcessUserLog(g, screen)
 	ProcessHUD(g, screen)
+	g.PlayerController.Draw(screen)
 }
 
 func main() {
@@ -98,6 +105,8 @@ func main() {
 
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	ebiten.SetWindowTitle("Topview game")
+	ebiten.SetCursorMode(ebiten.CursorModeHidden)
+
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
 	}

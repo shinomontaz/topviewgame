@@ -11,10 +11,12 @@ import (
 	"golang.org/x/image/font/opentype"
 )
 
-var hudImg *ebiten.Image = nil
-var hudErr error = nil
-var hudFont font.Face = nil
-var tiles []*ebiten.Image = nil
+var (
+	hudImg  *ebiten.Image   = nil
+	hudErr  error           = nil
+	hudFont font.Face       = nil
+	tiles   []*ebiten.Image = nil
+)
 
 const fontSize = 24
 
