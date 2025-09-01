@@ -59,8 +59,6 @@ func ProcessPlayer(g *Game) {
 		pos := result.Components[positionC].(*Position)
 		player := result.Components[playerC].(*Player)
 
-		g.SetCenter(*pos)
-
 		newX := pos.X + dx
 		newY := pos.Y + dy
 		index := level.GetIndexFromXY(newX, newY)
@@ -87,5 +85,7 @@ func ProcessPlayer(g *Game) {
 			g.Turn = GetNextState(g.Turn)
 			g.TurnCounter = 0
 		}
+
+		g.SetCenter(*pos)
 	}
 }
