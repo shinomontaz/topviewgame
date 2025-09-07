@@ -17,7 +17,7 @@ var (
 	lastText        []string      = make([]string, 0, 5)
 )
 
-func ProcessUserLog(g *Game, screen *ebiten.Image) {
+func DrawUserLog(g *Game, screen *ebiten.Image) {
 	if userLogImg == nil {
 		gd := g.GetData()
 		userLogImg, err = createBorder(gd.ScreenWidth/2, gd.UIHeight, gd.TileWidth)

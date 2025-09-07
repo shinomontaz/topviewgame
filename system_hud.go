@@ -20,7 +20,7 @@ var (
 
 const fontSize = 24
 
-func ProcessHUD(g *Game, screen *ebiten.Image) {
+func DrawHUD(g *Game, screen *ebiten.Image) {
 	gd := g.GetData()
 	uiY := gd.ScreenHeight * gd.TileHeight
 	uiX := gd.ScreenWidth * gd.TileWidth / 2

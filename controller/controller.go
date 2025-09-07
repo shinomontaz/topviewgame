@@ -2,6 +2,7 @@ package controller
 
 import (
 	"log"
+	"topviewgame/event"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -32,43 +33,31 @@ func (h Human) Draw(screen *ebiten.Image) {
 	screen.DrawImage(h.cursorImg, op)
 }
 
-func (h Human) GetMouseScreenTile() (int, int) {
-	x, y := ebiten.CursorPosition()
-	tileX := x / h.TileWidth
-	tileY := y / h.TileHeight
-	return tileX, tileY
-}
-
-func (h Human) GetDirection() (int, int) {
-	dx, dy := 0, 0
+func (h Human) GetEvent() event.Event {
 	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
-		dy = -1
+		return event.Event{Type: event.EventKey, Pos: [2]int{0, -1}}
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
-		dy = 1
+		return event.Event{Type: event.EventKey, Pos: [2]int{0, 1}}
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
-		dx = -1
+		return event.Event{Type: event.EventKey, Pos: [2]int{-1, 0}}
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
-		dx = 1
+		return event.Event{Type: event.EventKey, Pos: [2]int{1, 0}}
+	}
+	if ebiten.IsKeyPressed(ebiten.KeySpace) {
+		return event.Event{Type: event.EventPass}
 	}
 
-	return dx, dy
+	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+		x, y := ebiten.CursorPosition()
+		return event.Event{Type: event.EventClick, Pos: [2]int{x, y}}
+	}
+
+	return event.Event{Type: event.EventNone}
 }
 
-const (
-	ActionNone Action = iota
-	ActionPass
-	ActionAttack
-	ActionPickup
-)
-
-type Action int
-
-func (h Human) GetAction() Action {
-	if ebiten.IsKeyPressed(ebiten.KeySpace) {
-		return ActionPass
-	}
-	return ActionNone
+func (h Human) GetCursor() (int, int) {
+	return ebiten.CursorPosition()
 }

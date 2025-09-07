@@ -5,16 +5,15 @@ import (
 	"log"
 	"time"
 	"topviewgame/controller"
+	"topviewgame/event"
 
 	"github.com/bytearena/ecs"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type controllable interface {
-	GetDirection() (dx, dy int)
-	GetAction() controller.Action
-	GetMouseScreenTile() (int, int)
-	Draw(screen *ebiten.Image)
+	GetEvent() event.Event
+	GetCursor() (int, int)
 }
 
 type Game struct {
@@ -27,6 +26,7 @@ type Game struct {
 	last             time.Time
 	PlayerController controllable
 	gd               *GameData
+	gm               *GameMap
 	Center           Position
 	viewport         Rect
 }
@@ -34,7 +34,7 @@ type Game struct {
 func NewGame() *Game {
 	gd := NewGameData()
 	m := NewGameMap(gd)
-	world, tags := InitializeWorld(m.CurrentLevel)
+	world, tags := InitializeWorld(m)
 
 	return &Game{
 		PlayerController: controller.Human{TileWidth: gd.TileWidth, TileHeight: gd.TileHeight},
@@ -45,6 +45,7 @@ func NewGame() *Game {
 		TurnCounter:      0,
 		last:             time.Now(),
 		gd:               &gd,
+		gm:               &m,
 	}
 }
 
@@ -57,6 +58,10 @@ func (g *Game) SetCenter(pos Position) {
 		X2: playerX + g.gd.ScreenWidth/2,
 		Y2: playerY + g.gd.ScreenHeight/2,
 	}
+}
+
+func (g *Game) Viewport() Rect {
+	return g.viewport
 }
 
 func (g *Game) GetData() *GameData {
@@ -72,10 +77,11 @@ func (g *Game) Update() error {
 	g.last = time.Now()
 
 	UpdateAnimations(g.dt, g)
+	UpdateCursor(g)
 
 	g.TurnCounter++
 	if g.Turn == PlayerTurn && g.TurnCounter > 10 {
-		ProcessPlayer(g)
+		UpdatePlayer(g)
 	}
 	if g.Turn == EnemyTurn {
 		UpdateMonsters(g)
@@ -94,10 +100,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	level := g.Map.CurrentLevel
 	level.Draw(screen, g.viewport)
 
-	ProcessRenderables(g, level, screen, g.viewport)
-	ProcessUserLog(g, screen)
-	ProcessHUD(g, screen)
-	g.PlayerController.Draw(screen)
+	DrawRenderables(g, level, screen, g.viewport)
+	DrawUserLog(g, screen)
+	DrawHUD(g, screen)
+	DrawCursor(g, screen)
 }
 
 func main() {

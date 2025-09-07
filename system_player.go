@@ -1,58 +1,59 @@
 package main
 
 import (
-	"topviewgame/controller"
-
-	"github.com/hajimehoshi/ebiten/v2"
+	"topviewgame/event"
 )
 
-func getDirection(g *Game) (int, int) {
-	dx, dy := g.PlayerController.GetDirection()
+func getDirection(g *Game, ev event.Event) (int, int) {
+	x, y := ev.Pos[0], ev.Pos[1]
+	if ev.Type == event.EventKey {
+		return x, y
+	}
+	level := g.Map.CurrentLevel
 
-	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-		mouseScreenTileX, mouseScreenTileY := g.PlayerController.GetMouseScreenTile()
+	targetX := x/level.gd.TileWidth + g.viewport.X1
+	targetY := y/level.gd.TileHeight + g.viewport.Y1
+	targetPos := Position{targetX, targetY}
 
-		targetX := mouseScreenTileX + g.viewport.X1
-		targetY := mouseScreenTileY + g.viewport.Y1
-		level := g.Map.CurrentLevel
-		targetPos := Position{targetX, targetY}
+	if targetX >= 0 && targetX < level.gd.MapWidth && targetY >= 0 && targetY < level.gd.MapHeight {
+		targetIdx := level.GetIndexFromXY(targetX, targetY)
+		targetTile := level.Tiles[targetIdx]
 
-		if targetX >= 0 && targetX < level.gd.MapWidth && targetY >= 0 && targetY < level.gd.MapHeight {
-			targetIdx := level.GetIndexFromXY(targetX, targetY)
-			targetTile := level.Tiles[targetIdx]
+		if !targetTile.IsRevealed {
+			// calculate path from target to closest revealed tile
+			// update targetTile to founded
 
-			if !targetTile.IsRevealed {
-				// calculate path from target to closest revealed tile
-				// update targetTile to founded
-
-				targetPos = level.ClosestVisibleOnLine(Position{targetX, targetY}, g.Center)
-			}
-			astar := AStar{}
-			path := astar.GetPath(level, &g.Center, &targetPos)
-			if len(path) == 0 { // cannot find path
-				return dx, dy
-			}
-
-			dx = path[0].X - g.Center.X
-			dy = path[0].Y - g.Center.Y
+			targetPos = level.ClosestVisibleOnLine(Position{targetX, targetY}, g.Center)
 		}
+		astar := AStar{}
+		path := astar.GetPath(level, &g.Center, &targetPos)
+		if len(path) == 0 { // cannot find path
+			return 0, 0
+		}
+
+		x = path[1].X - g.Center.X
+		y = path[1].Y - g.Center.Y
 	}
 
-	return dx, dy
+	return x, y
 }
 
-func ProcessPlayer(g *Game) {
+func UpdatePlayer(g *Game) {
 	players := g.WorldTags["players"]
 	level := g.Map.CurrentLevel
-	action := g.PlayerController.GetAction()
-	if action == controller.ActionPass {
+	ev := g.PlayerController.GetEvent()
+	if ev.Type == event.EventNone {
+		return
+	}
+
+	if ev.Type == event.EventPass {
 		g.Turn = GetNextState(g.Turn)
 		g.TurnCounter = 0
 
 		return
 	}
 
-	dx, dy := getDirection(g)
+	dx, dy := getDirection(g, ev)
 	hasMoved := false
 
 	for _, result := range g.World.Query(players) {

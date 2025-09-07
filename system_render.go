@@ -2,7 +2,7 @@ package main
 
 import "github.com/hajimehoshi/ebiten/v2"
 
-func ProcessRenderables(g *Game, l Level, screen *ebiten.Image, viewport Rect) {
+func DrawRenderables(g *Game, l Level, screen *ebiten.Image, viewport Rect) {
 	tileSize := 32
 	offsetX := float64(viewport.X1 * tileSize)
 	offsetY := float64(viewport.Y1 * tileSize)
@@ -20,8 +20,8 @@ func ProcessRenderables(g *Game, l Level, screen *ebiten.Image, viewport Rect) {
 			localX := float64(tile.PixelX) - offsetX
 			localY := float64(tile.PixelY) - offsetY
 
-			spriteOffsetX := float64((48 - 32) / 2)
-			spriteOffsetY := float64(48 - 32) // align bottom of sprite with bottom of tile
+			spriteOffsetX := float64((48 - tileSize) / 2)
+			spriteOffsetY := float64(48 - tileSize) // align bottom of sprite with bottom of tile
 
 			op.GeoM.Translate(localX-spriteOffsetX, localY-spriteOffsetY)
 			screen.DrawImage(img, op)

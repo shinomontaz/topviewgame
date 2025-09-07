@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	"github.com/bytearena/ecs"
 )
 
@@ -13,6 +15,7 @@ var (
 	meleeWeaponC *ecs.Component
 	armorC       *ecs.Component
 	nameC        *ecs.Component
+	cursorC      *ecs.Component
 	userMessage  *ecs.Component
 )
 
@@ -25,7 +28,7 @@ func GetCenter(w *ecs.Manager, t ecs.Tag) Position {
 	return Position{}
 }
 
-func InitializeWorld(startingLevel Level) (*ecs.Manager, map[string]ecs.Tag) {
+func InitializeWorld(gm GameMap) (*ecs.Manager, map[string]ecs.Tag) {
 	tags := make(map[string]ecs.Tag)
 	manager := ecs.NewManager()
 
@@ -38,14 +41,13 @@ func InitializeWorld(startingLevel Level) (*ecs.Manager, map[string]ecs.Tag) {
 	meleeWeaponC = manager.NewComponent()
 	armorC = manager.NewComponent()
 	nameC = manager.NewComponent()
-
 	userMessage = manager.NewComponent()
+	cursorC = manager.NewComponent()
 
-	startingRoom := startingLevel.Rooms[0]
+	startingRoom := gm.CurrentLevel.Rooms[0]
+
 	playerX, playerY := startingRoom.Center()
-
 	player := NewPlayer()
-
 	manager.NewEntity().
 		AddComponent(playerC, player).
 		AddComponent(renderableC, player).
@@ -70,7 +72,7 @@ func InitializeWorld(startingLevel Level) (*ecs.Manager, map[string]ecs.Tag) {
 			GameStateMessage: "",
 		})
 
-	for _, room := range startingLevel.Rooms {
+	for _, room := range gm.CurrentLevel.Rooms {
 		if room.X1 != startingRoom.X1 {
 			var (
 				monsterType MonsterType
@@ -86,13 +88,11 @@ func InitializeWorld(startingLevel Level) (*ecs.Manager, map[string]ecs.Tag) {
 			}
 			monster := NewMonster(monsterType)
 			mX, mY := room.Center()
+			pos := Position{X: mX, Y: mY}
 			ent := manager.NewEntity().
 				AddComponent(monsterC, monster).
 				AddComponent(renderableC, monster).
-				AddComponent(positionC, &Position{
-					X: mX,
-					Y: mY,
-				}).
+				AddComponent(positionC, &pos).
 				AddComponent(nameC, &Name{Label: monsterName}).
 				AddComponent(userMessage, &UserMessage{
 					AttackMessage:    "",
@@ -129,8 +129,16 @@ func InitializeWorld(startingLevel Level) (*ecs.Manager, map[string]ecs.Tag) {
 					Dodge:   0,
 				})
 			}
+
+			gm.monsterPositions[pos] = ent
 		}
 	}
+
+	cursor, err := NewCursor(gm.Gd.TileWidth, gm.Gd.TileHeight)
+	if err != nil {
+		log.Fatal(err)
+	}
+	manager.NewEntity().AddComponent(cursorC, cursor)
 
 	monsters := ecs.BuildTag(monsterC, positionC, healthC, meleeWeaponC, armorC, nameC, userMessage)
 	tags["monsters"] = monsters
@@ -143,6 +151,9 @@ func InitializeWorld(startingLevel Level) (*ecs.Manager, map[string]ecs.Tag) {
 
 	messengers := ecs.BuildTag(userMessage)
 	tags["messengers"] = messengers
+
+	cursors := ecs.BuildTag(cursorC)
+	tags["cursors"] = cursors
 
 	return manager, tags
 }
