@@ -8,6 +8,7 @@ import (
 type Cursor struct {
 	sX, sY int // screen position
 	mX, mY int // map-space coordinates
+	tX, tY int // tile position
 	//	Img            *ebiten.Image // cursor image
 	scaleX, scaleY float64
 	Width          int
@@ -50,13 +51,22 @@ func NewCursor(w, h int) (*Cursor, error) {
 	}
 	c.images[CursorForbidden] = imgForbidden
 
+
+	imgTileSelect, _, err := ebitenutil.NewImageFromFile("assets/tile_selection.png")
+	if err != nil {
+		return nil, err
+	}
+	c.images[Selection] = imgTileSelect
+
 	return &c, nil
 }
 
 func (c *Cursor) Update(x, y int, vp Rect, tileW, tileH int) {
 	c.sX, c.sY = x, y
-	c.mX = x/tileW + vp.X1
-	c.mY = y/tileH + vp.Y1
+	c.tX = x / tileW
+	c.tY = y / tileH
+	c.mX = c.tX + vp.X1
+	c.mY = c.tY + vp.Y1
 }
 
 func (c *Cursor) SetScreenPos(x, y int) {
@@ -78,9 +88,15 @@ func (c *Cursor) GetImage() *ebiten.Image {
 	return c.images[c.state]
 }
 
+func (c *Cursor) GetSelection() *ebiten.Image {
+	return c.images[Selection]
+}
+
+
 const (
 	CursorDefault = iota
 	CursorAttack
 	CursorSelect
 	CursorForbidden
+	Selection
 )

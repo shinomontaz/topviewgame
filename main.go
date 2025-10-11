@@ -29,12 +29,25 @@ type Game struct {
 	gm               *GameMap
 	Center           Position
 	viewport         Rect
+	
+	// Auto-movement system
+	AutoMovePath     []Position
+	AutoMoveIndex    int
+	IsAutoMoving     bool
+	AutoMoveTimer    float64
+	AutoMoveDelay    float64
+	PathVisualizer   *PathVisualizer
 }
 
 func NewGame() *Game {
 	gd := NewGameData()
 	m := NewGameMap(gd)
 	world, tags := InitializeWorld(m)
+
+	pathVis, err := NewPathVisualizer()
+	if err != nil {
+		log.Fatal("Failed to create path visualizer:", err)
+	}
 
 	return &Game{
 		PlayerController: controller.Human{TileWidth: gd.TileWidth, TileHeight: gd.TileHeight},
@@ -46,6 +59,8 @@ func NewGame() *Game {
 		last:             time.Now(),
 		gd:               &gd,
 		gm:               &m,
+		AutoMoveDelay:    0.2, // 200ms delay between auto-movement steps
+		PathVisualizer:   pathVis,
 	}
 }
 
@@ -78,6 +93,7 @@ func (g *Game) Update() error {
 
 	UpdateAnimations(g.dt, g)
 	UpdateCursor(g)
+	g.UpdateAutoMoveTimer(g.dt) // Update auto-movement timer
 
 	g.TurnCounter++
 	if g.Turn == PlayerTurn && g.TurnCounter > 10 {
@@ -96,11 +112,73 @@ func (g *Game) GetViewport() Rect {
 	return g.viewport
 }
 
+// Auto-movement methods
+func (g *Game) StartAutoMove(path []Position) {
+	if len(path) > 1 {
+		g.AutoMovePath = path
+		g.AutoMoveIndex = 1 // Start from index 1 (0 is current position)
+		g.IsAutoMoving = true
+		g.AutoMoveTimer = 0 // Reset timer
+	}
+}
+
+func (g *Game) StopAutoMove() {
+	g.IsAutoMoving = false
+	g.AutoMovePath = nil
+	g.AutoMoveIndex = 0
+	g.AutoMoveTimer = 0
+}
+
+func (g *Game) UpdateAutoMoveTimer(dt float64) {
+	if g.IsAutoMoving {
+		g.AutoMoveTimer += dt
+	}
+}
+
+func (g *Game) CanAutoMoveStep() bool {
+	return g.IsAutoMoving && g.AutoMoveTimer >= g.AutoMoveDelay
+}
+
+func (g *Game) GetNextAutoMoveStep() (int, int, bool) {
+	if !g.IsAutoMoving || g.AutoMoveIndex >= len(g.AutoMovePath) {
+		g.StopAutoMove()
+		return 0, 0, false
+	}
+	
+	nextPos := g.AutoMovePath[g.AutoMoveIndex]
+	dx := nextPos.X - g.Center.X
+	dy := nextPos.Y - g.Center.Y
+	g.AutoMoveIndex++
+	g.AutoMoveTimer = 0 // Reset timer for next step
+	
+	return dx, dy, true
+}
+
+func (g *Game) IsEnemyInSight() bool {
+	level := g.Map.CurrentLevel
+	for _, result := range g.World.Query(g.WorldTags["monsters"]) {
+		pos := result.Components[positionC].(*Position)
+		monster := result.Components[monsterC].(*Monster)
+		
+		// Skip dead monsters
+		if monster.IsDead() {
+			continue
+		}
+		
+		// Check if monster is visible to player
+		if level.PlayerVisible.IsVisible(pos.X, pos.Y) {
+			return true
+		}
+	}
+	return false
+}
+
 func (g *Game) Draw(screen *ebiten.Image) {
 	level := g.Map.CurrentLevel
 	level.Draw(screen, g.viewport)
 
 	DrawRenderables(g, level, screen, g.viewport)
+	DrawPath(g, screen) // Draw path before cursor
 	DrawUserLog(g, screen)
 	DrawHUD(g, screen)
 	DrawCursor(g, screen)

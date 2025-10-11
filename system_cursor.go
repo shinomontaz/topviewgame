@@ -24,6 +24,13 @@ func UpdateCursor(g *Game) {
 func DrawCursor(g *Game, screen *ebiten.Image) {
 	for _, res := range g.World.Query(g.WorldTags["cursors"]) {
 		cursor := res.Components[cursorC].(*Cursor)
+
+		if cursor.state == CursorDefault {
+			op1 := &ebiten.DrawImageOptions{}
+			op1.GeoM.Translate(float64(cursor.tX*g.gd.TileWidth), float64(cursor.tY*g.gd.TileHeight))
+			screen.DrawImage(cursor.GetSelection(), op1)
+		}
+
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Scale(cursor.scaleX, cursor.scaleY)
 		sx, sy := cursor.ScreenPos()
