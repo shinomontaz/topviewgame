@@ -52,13 +52,13 @@ func UpdateMonsters(g *Game) {
 			if len(path) > 1 {
 				nextTile := l.Tiles[l.GetIndexFromXY(path[1].X, path[1].Y)]
 				if !nextTile.Blocked {
-					delete(g.gm.monsterPositions, *pos)
+					oldPos := *pos
 					l.Tiles[l.GetIndexFromXY(pos.X, pos.Y)].Blocked = false
 					pos.X = path[1].X
 					pos.Y = path[1].Y
 					l.Tiles[l.GetIndexFromXY(pos.X, pos.Y)].Blocked = true
 
-					g.gm.monsterPositions[*pos] = result.Entity
+					g.gm.updateMonsterPosition(result.Entity, &oldPos, pos)
 				}
 			}
 		}

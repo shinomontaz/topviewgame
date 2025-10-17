@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"log"
 	"topviewgame/event"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -18,8 +17,12 @@ func (h Human) Draw(screen *ebiten.Image) {
 	if h.cursorImg == nil {
 		h.cursorImg, _, h.err = ebitenutil.NewImageFromFile("assets/cursor.png")
 		if h.err != nil {
-			log.Fatal(h.err)
+			return
 		}
+	}
+
+	if h.cursorImg == nil {
+		return
 	}
 
 	x, y := ebiten.CursorPosition()

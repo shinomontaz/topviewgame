@@ -29,3 +29,15 @@ func NewGameMap(gd GameData) GameMap {
 func (gm *GameMap) MonsterAt(p Position) bool {
 	return gm.monsterPositions[p] != nil
 }
+
+func (gm *GameMap) updateMonsterPosition(entity *ecs.Entity, from, to *Position) {
+	if gm.monsterPositions == nil {
+		gm.monsterPositions = make(map[Position]*ecs.Entity)
+	}
+	if from != nil {
+		delete(gm.monsterPositions, *from)
+	}
+	if to != nil {
+		gm.monsterPositions[*to] = entity
+	}
+}

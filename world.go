@@ -19,6 +19,19 @@ var (
 	userMessage  *ecs.Component
 )
 
+func resetComponentGlobals() {
+	positionC = nil
+	renderableC = nil
+	playerC = nil
+	monsterC = nil
+	healthC = nil
+	meleeWeaponC = nil
+	armorC = nil
+	nameC = nil
+	cursorC = nil
+	userMessage = nil
+}
+
 func GetCenter(w *ecs.Manager, t ecs.Tag) Position {
 	for _, player := range w.Query(t) {
 		pos := player.Components[positionC].(*Position)
@@ -31,6 +44,7 @@ func GetCenter(w *ecs.Manager, t ecs.Tag) Position {
 func InitializeWorld(gm GameMap) (*ecs.Manager, map[string]ecs.Tag) {
 	tags := make(map[string]ecs.Tag)
 	manager := ecs.NewManager()
+	resetComponentGlobals()
 
 	playerC = manager.NewComponent()
 	positionC = manager.NewComponent()
@@ -129,8 +143,7 @@ func InitializeWorld(gm GameMap) (*ecs.Manager, map[string]ecs.Tag) {
 					Dodge:   0,
 				})
 			}
-
-			gm.monsterPositions[pos] = ent
+		gm.updateMonsterPosition(ent, nil, &pos)
 		}
 	}
 

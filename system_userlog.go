@@ -22,7 +22,8 @@ func DrawUserLog(g *Game, screen *ebiten.Image) {
 		gd := g.GetData()
 		userLogImg, err = createBorder(gd.ScreenWidth/2, gd.UIHeight, gd.TileWidth)
 		if err != nil {
-			log.Fatal(err)
+			log.Println("failed to create user log border:", err)
+			return
 		}
 	}
 
@@ -35,7 +36,8 @@ func DrawUserLog(g *Game, screen *ebiten.Image) {
 		}
 		mplusNormalFont, err = loadFont("assets/fonts/ExpressionPro.ttf", &opts)
 		if err != nil {
-			log.Fatal(err)
+			log.Println("failed to load user log font:", err)
+			return
 		}
 	}
 
@@ -71,11 +73,15 @@ func DrawUserLog(g *Game, screen *ebiten.Image) {
 
 	}
 	if anyMessages {
-		if len(lastText) > 0 && len(lastText)+len(tmpMessages) > 5 {
-			lastText = lastText[len(lastText)-len(tmpMessages):]
+		for _, message := range tmpMessages {
+			if message == "" {
+				continue
+			}
+			lastText = append(lastText, message)
+			if len(lastText) > 5 {
+				lastText = lastText[len(lastText)-5:]
+			}
 		}
-
-		lastText = append(lastText, tmpMessages...)
 	}
 	for _, msg := range lastText {
 		if msg != "" {

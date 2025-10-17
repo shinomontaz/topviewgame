@@ -3,9 +3,10 @@ package main
 import "github.com/hajimehoshi/ebiten/v2"
 
 func DrawRenderables(g *Game, l Level, screen *ebiten.Image, viewport Rect) {
-	tileSize := 32
-	offsetX := float64(viewport.X1 * tileSize)
-	offsetY := float64(viewport.Y1 * tileSize)
+	tileWidth := g.gd.TileWidth
+	tileHeight := g.gd.TileHeight
+	offsetX := float64(viewport.X1 * tileWidth)
+	offsetY := float64(viewport.Y1 * tileHeight)
 
 	for _, result := range g.World.Query(g.WorldTags["renderables"]) {
 		pos := result.Components[positionC].(*Position)
@@ -20,8 +21,8 @@ func DrawRenderables(g *Game, l Level, screen *ebiten.Image, viewport Rect) {
 			localX := float64(tile.PixelX) - offsetX
 			localY := float64(tile.PixelY) - offsetY
 
-			spriteOffsetX := float64((48 - tileSize) / 2)
-			spriteOffsetY := float64(48 - tileSize) // align bottom of sprite with bottom of tile
+			spriteOffsetX := float64((48 - tileWidth) / 2)
+			spriteOffsetY := float64(48 - tileHeight)
 
 			op.GeoM.Translate(localX-spriteOffsetX, localY-spriteOffsetY)
 			screen.DrawImage(img, op)

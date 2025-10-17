@@ -62,6 +62,9 @@ func (l *Level) GetDimensions() (int, int) {
 }
 
 func (l Level) TileAt(x, y int) *MapTile {
+	if !l.InBounds(x, y) {
+		return nil
+	}
 	return l.Tiles[l.GetIndexFromXY(x, y)]
 }
 
@@ -200,7 +203,10 @@ func (l *Level) adjust() {
 }
 
 func (l Level) InBounds(x, y int) bool {
-	if x < 0 || x > l.gd.MapWidth || y < 0 || y > l.gd.MapHeight {
+	if x < 0 || y < 0 {
+		return false
+	}
+	if x >= l.gd.MapWidth || y >= l.gd.MapHeight {
 		return false
 	}
 

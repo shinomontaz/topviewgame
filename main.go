@@ -29,14 +29,14 @@ type Game struct {
 	gm               *GameMap
 	Center           Position
 	viewport         Rect
-	
+
 	// Auto-movement system
-	AutoMovePath     []Position
-	AutoMoveIndex    int
-	IsAutoMoving     bool
-	AutoMoveTimer    float64
-	AutoMoveDelay    float64
-	PathVisualizer   *PathVisualizer
+	AutoMovePath   []Position
+	AutoMoveIndex  int
+	IsAutoMoving   bool
+	AutoMoveTimer  float64
+	AutoMoveDelay  float64
+	PathVisualizer *PathVisualizer
 }
 
 func NewGame() *Game {
@@ -46,7 +46,7 @@ func NewGame() *Game {
 
 	pathVis, err := NewPathVisualizer()
 	if err != nil {
-		log.Fatal("Failed to create path visualizer:", err)
+		log.Println("Path visualization disabled:", err)
 	}
 
 	return &Game{
@@ -144,13 +144,13 @@ func (g *Game) GetNextAutoMoveStep() (int, int, bool) {
 		g.StopAutoMove()
 		return 0, 0, false
 	}
-	
+
 	nextPos := g.AutoMovePath[g.AutoMoveIndex]
 	dx := nextPos.X - g.Center.X
 	dy := nextPos.Y - g.Center.Y
 	g.AutoMoveIndex++
 	g.AutoMoveTimer = 0 // Reset timer for next step
-	
+
 	return dx, dy, true
 }
 
@@ -159,12 +159,12 @@ func (g *Game) IsEnemyInSight() bool {
 	for _, result := range g.World.Query(g.WorldTags["monsters"]) {
 		pos := result.Components[positionC].(*Position)
 		monster := result.Components[monsterC].(*Monster)
-		
+
 		// Skip dead monsters
 		if monster.IsDead() {
 			continue
 		}
-		
+
 		// Check if monster is visible to player
 		if level.PlayerVisible.IsVisible(pos.X, pos.Y) {
 			return true

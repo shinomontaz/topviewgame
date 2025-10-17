@@ -81,6 +81,7 @@ func ProcessAttacks(g *Game, attPos, defPos *Position) {
 			l := g.Map.CurrentLevel
 			t := l.Tiles[l.GetIndexFromXY(defPos.X, defPos.Y)]
 			t.Blocked = false
+			g.gm.updateMonsterPosition(defender.Entity, defPos, nil)
 			defender.Components[monsterC].(*Monster).SetState(state.DEATH)
 		}
 	} else {
