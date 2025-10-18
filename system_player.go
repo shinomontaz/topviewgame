@@ -9,13 +9,13 @@ func getDirection(g *Game, ev event.Event) (int, int) {
 	if ev.Type == event.EventKey {
 		return x, y
 	}
-	
+
 	// For mouse clicks, we don't return direction anymore
 	// The auto-movement system handles pathfinding
 	if ev.Type == event.EventClick {
 		return 0, 0
 	}
-	
+
 	return x, y
 }
 
@@ -23,40 +23,40 @@ func UpdatePlayer(g *Game) {
 	players := g.WorldTags["players"]
 	level := g.Map.CurrentLevel
 	ev := g.PlayerController.GetEvent()
-	
+
 	// Check for user input that should interrupt auto-movement
 	if ev.Type != event.EventNone {
 		g.StopAutoMove() // Stop auto-movement on any user input
 	}
-	
+
 	// Handle manual input first
 	if ev.Type == event.EventPass {
 		g.Turn = GetNextState(g.Turn)
 		g.TurnCounter = 0
 		return
 	}
-	
+
 	var dx, dy int
 	var hasMoved bool
-	
+
 	// If we have manual input, process it
 	if ev.Type != event.EventNone {
 		dx, dy = getDirection(g, ev)
-		
+
 		// If it's a mouse click, start auto-movement
 		if ev.Type == event.EventClick {
 			targetX := ev.Pos[0]/level.gd.TileWidth + g.viewport.X1
 			targetY := ev.Pos[1]/level.gd.TileHeight + g.viewport.Y1
 			targetPos := Position{targetX, targetY}
-			
+
 			if targetX >= 0 && targetX < level.gd.MapWidth && targetY >= 0 && targetY < level.gd.MapHeight {
 				targetIdx := level.GetIndexFromXY(targetX, targetY)
 				targetTile := level.Tiles[targetIdx]
-				
+
 				if !targetTile.IsRevealed {
 					targetPos = level.ClosestVisibleOnLine(Position{targetX, targetY}, g.Center)
 				}
-				
+
 				astar := AStar{}
 				path := astar.GetPath(level, &g.Center, &targetPos)
 				if len(path) > 1 {
@@ -72,12 +72,12 @@ func UpdatePlayer(g *Game) {
 			g.StopAutoMove()
 			return
 		}
-		
+
 		// Check if enough time has passed for next step
 		if !g.CanAutoMoveStep() {
 			return // Wait for timer
 		}
-		
+
 		// Get next step from auto-movement
 		var hasStep bool
 		dx, dy, hasStep = g.GetNextAutoMoveStep()

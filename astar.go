@@ -19,8 +19,7 @@ func (n *node) isEqual(o *node) bool {
 	return n.Pos.X == o.Pos.X && n.Pos.Y == o.Pos.Y
 }
 
-type AStar struct {
-}
+type AStar struct{}
 
 func (as AStar) GetPath(l Level, start, end *Position) []Position {
 	openList := Heap[*node]{}

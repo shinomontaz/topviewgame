@@ -143,7 +143,7 @@ func InitializeWorld(gm GameMap) (*ecs.Manager, map[string]ecs.Tag) {
 					Dodge:   0,
 				})
 			}
-		gm.updateMonsterPosition(ent, nil, &pos)
+			gm.updateMonsterPosition(ent, nil, &pos)
 		}
 	}
 

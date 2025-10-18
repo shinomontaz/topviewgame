@@ -1,24 +1,12 @@
 package main
 
 import (
-	"math"
-
 	"github.com/hajimehoshi/ebiten/v2"
+
+	core "topviewgame/internal/core"
 )
 
-type Position struct {
-	X, Y int
-}
-
-func (p *Position) GetManhattanDistance(other *Position) int {
-	xDist := math.Abs(float64(p.X - other.X))
-	yDist := math.Abs(float64(p.Y - other.Y))
-	return int(xDist) + int(yDist)
-}
-
-func (p *Position) IsEqual(other *Position) bool {
-	return (p.X == other.X && p.Y == other.Y)
-}
+type Position = core.Position
 
 type Renderable interface {
 	GetImage() *ebiten.Image
