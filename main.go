@@ -6,8 +6,8 @@ import (
 	"time"
 	"topviewgame/controller"
 	"topviewgame/event"
+	"topviewgame/internal/world"
 
-	"github.com/bytearena/ecs"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -18,8 +18,7 @@ type controllable interface {
 
 type Game struct {
 	Map              GameMap
-	World            *ecs.Manager
-	WorldTags        map[string]ecs.Tag
+	World            *world.World
 	Turn             TurnState
 	TurnCounter      int
 	dt               float64
@@ -42,7 +41,11 @@ type Game struct {
 func NewGame() *Game {
 	gd := NewGameData()
 	m := NewGameMap(gd)
-	world, tags := InitializeWorld(m)
+	gameWorld := world.NewWorld()
+	
+	// Initialize entities using the old logic for now
+	// This will be refactored in the next step
+	InitializeWorldEntities(gameWorld, m)
 
 	pathVis, err := NewPathVisualizer()
 	if err != nil {
@@ -52,8 +55,7 @@ func NewGame() *Game {
 	return &Game{
 		PlayerController: controller.Human{TileWidth: gd.TileWidth, TileHeight: gd.TileHeight},
 		Map:              m,
-		World:            world,
-		WorldTags:        tags,
+		World:            gameWorld,
 		Turn:             PlayerTurn,
 		TurnCounter:      0,
 		last:             time.Now(),
@@ -62,6 +64,104 @@ func NewGame() *Game {
 		AutoMoveDelay:    0.2, // 200ms delay between auto-movement steps
 		PathVisualizer:   pathVis,
 	}
+}
+
+// InitializeWorldEntities initializes game entities using the new World
+// This is a temporary bridge function that will be refactored
+func InitializeWorldEntities(w *world.World, gm GameMap) {
+	startingRoom := gm.CurrentLevel.Rooms[0]
+
+	playerX, playerY := startingRoom.Center()
+	player := NewPlayer()
+	w.NewEntity().
+		AddComponent(w.PlayerComponent(), player).
+		AddComponent(w.RenderableComponent(), player).
+		AddComponent(w.PositionComponent(), &Position{X: playerX, Y: playerY}).
+		AddComponent(w.HealthComponent(), &world.Health{Max: 30, Current: 30}).
+		AddComponent(w.MeleeWeaponComponent(), &world.MeleeWeapon{
+			Name:       "Fist",
+			MinDamage:  1,
+			MaxDamage:  3,
+			ToHitBonus: 2,
+		}).
+		AddComponent(w.ArmorComponent(), &world.Armor{
+			Name:    "Burlap Sack",
+			Defence: 1,
+			Dodge:   1,
+		}).
+		AddComponent(w.NameComponent(), &world.Name{Label: "Player"}).
+		AddComponent(w.UserMessageComponent(), &world.UserMessage{
+			AttackMessage:    "",
+			DeadMessage:      "",
+			GameStateMessage: "",
+		})
+
+	for _, room := range gm.CurrentLevel.Rooms {
+		if room.X1 != startingRoom.X1 {
+			var (
+				monsterType MonsterType
+				monsterName string
+			)
+			switch rnd.Intn(2) {
+			case 0:
+				monsterType = SKELETON
+				monsterName = "Skeleton"
+			case 1:
+				monsterType = ZOMBIE
+				monsterName = "Zombie"
+			}
+			monster := NewMonster(monsterType)
+			mX, mY := room.Center()
+			pos := Position{X: mX, Y: mY}
+			ent := w.NewEntity().
+				AddComponent(w.MonsterComponent(), monster).
+				AddComponent(w.RenderableComponent(), monster).
+				AddComponent(w.PositionComponent(), &pos).
+				AddComponent(w.NameComponent(), &world.Name{Label: monsterName}).
+				AddComponent(w.UserMessageComponent(), &world.UserMessage{
+					AttackMessage:    "",
+					DeadMessage:      "",
+					GameStateMessage: "",
+				})
+
+			if monsterType == SKELETON {
+				ent.AddComponent(w.HealthComponent(), &world.Health{
+					Max:     10,
+					Current: 2,
+				}).AddComponent(w.MeleeWeaponComponent(), &world.MeleeWeapon{
+					Name:       "Short Sword",
+					MinDamage:  2,
+					MaxDamage:  6,
+					ToHitBonus: 0,
+				}).AddComponent(w.ArmorComponent(), &world.Armor{
+					Name:    "No armor",
+					Defence: 0,
+					Dodge:   5,
+				})
+			} else {
+				ent.AddComponent(w.HealthComponent(), &world.Health{
+					Max:     20,
+					Current: 2,
+				}).AddComponent(w.MeleeWeaponComponent(), &world.MeleeWeapon{
+					Name:       "Khopesh",
+					MinDamage:  1,
+					MaxDamage:  4,
+					ToHitBonus: 1,
+				}).AddComponent(w.ArmorComponent(), &world.Armor{
+					Name:    "Rotten rags",
+					Defence: 1,
+					Dodge:   0,
+				})
+			}
+			gm.updateMonsterPosition(ent, nil, &pos)
+		}
+	}
+
+	cursor, err := NewCursor(gm.Gd.TileWidth, gm.Gd.TileHeight)
+	if err != nil {
+		log.Fatal(err)
+	}
+	w.NewEntity().AddComponent(w.CursorComponent(), cursor)
 }
 
 func (g *Game) SetCenter(pos Position) {
@@ -156,9 +256,9 @@ func (g *Game) GetNextAutoMoveStep() (int, int, bool) {
 
 func (g *Game) IsEnemyInSight() bool {
 	level := g.Map.CurrentLevel
-	for _, result := range g.World.Query(g.WorldTags["monsters"]) {
-		pos := result.Components[positionC].(*Position)
-		monster := result.Components[monsterC].(*Monster)
+	for _, result := range g.World.QueryMonsters() {
+		pos := g.World.GetPosition(result)
+		monster := g.World.GetMonster(result).(*Monster)
 
 		// Skip dead monsters
 		if monster.IsDead() {

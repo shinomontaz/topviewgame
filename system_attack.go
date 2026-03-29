@@ -13,8 +13,8 @@ func ProcessAttacks(g *Game, attPos, defPos *Position) {
 		defender *ecs.QueryResult = nil
 	)
 
-	for _, playerCombatant := range g.World.Query(g.WorldTags["players"]) {
-		pos := playerCombatant.Components[positionC].(*Position)
+	for _, playerCombatant := range g.World.QueryPlayers() {
+		pos := g.World.GetPosition(playerCombatant)
 		if pos.IsEqual(attPos) {
 			attacker = playerCombatant
 		} else if pos.IsEqual(defPos) {
@@ -22,11 +22,11 @@ func ProcessAttacks(g *Game, attPos, defPos *Position) {
 		}
 	}
 
-	for _, cbt := range g.World.Query(g.WorldTags["monsters"]) {
-		if cbt.Components[monsterC].(*Monster).IsDead() {
+	for _, cbt := range g.World.QueryMonsters() {
+		if g.World.GetMonster(cbt).(*Monster).IsDead() {
 			continue
 		}
-		pos := cbt.Components[positionC].(*Position)
+		pos := g.World.GetPosition(cbt)
 		if pos.IsEqual(attPos) {
 			attacker = cbt
 		} else if pos.IsEqual(defPos) {
@@ -38,22 +38,22 @@ func ProcessAttacks(g *Game, attPos, defPos *Position) {
 		return
 	}
 
-	defenderArmor := defender.Components[armorC].(*Armor)
-	defenderHealth := defender.Components[healthC].(*Health)
-	defenderName := defender.Components[nameC].(*Name).Label
-	attackerWeapon := attacker.Components[meleeWeaponC].(*MeleeWeapon)
-	attackerName := attacker.Components[nameC].(*Name).Label
-	defenderMessage := defender.Components[userMessage].(*UserMessage)
-	attackerMessage := attacker.Components[userMessage].(*UserMessage)
+	defenderArmor := g.World.GetArmor(defender)
+	defenderHealth := g.World.GetHealth(defender)
+	defenderName := g.World.GetName(defender).Label
+	attackerWeapon := g.World.GetMeleeWeapon(attacker)
+	attackerName := g.World.GetName(attacker).Label
+	defenderMessage := g.World.GetUserMessage(defender)
+	attackerMessage := g.World.GetUserMessage(attacker)
 
-	if attacker.Components[healthC].(*Health).Current <= 0 {
+	if g.World.GetHealth(attacker).Current <= 0 {
 		return
 	}
 
 	if defenderName == "Player" {
-		defender.Components[playerC].(*Player).SetState(state.STAND)
+		g.World.GetPlayer(defender).(*Player).SetState(state.STAND)
 	} else {
-		defender.Components[monsterC].(*Monster).SetState(state.STAND)
+		g.World.GetMonster(defender).(*Monster).SetState(state.STAND)
 	}
 
 	toHitRoll := GetDiceRoll(10)
@@ -82,7 +82,7 @@ func ProcessAttacks(g *Game, attPos, defPos *Position) {
 			t := l.Tiles[l.GetIndexFromXY(defPos.X, defPos.Y)]
 			t.Blocked = false
 			g.gm.updateMonsterPosition(defender.Entity, defPos, nil)
-			defender.Components[monsterC].(*Monster).SetState(state.DEATH)
+			g.World.GetMonster(defender).(*Monster).SetState(state.DEATH)
 		}
 	} else {
 		attackerMessage.AttackMessage = fmt.Sprintf("%s missed %s", attackerName, defenderName)

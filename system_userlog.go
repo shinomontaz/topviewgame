@@ -51,16 +51,16 @@ func DrawUserLog(g *Game, screen *ebiten.Image) {
 
 	tmpMessages := make([]string, 0, 5)
 	anyMessages := false
-	for _, m := range g.World.Query(g.WorldTags["messengers"]) {
-		messages := m.Components[userMessage].(*UserMessage)
+	for _, m := range g.World.QueryMessengers() {
+		messages := g.World.GetUserMessage(m)
 		if messages.AttackMessage != "" {
 			tmpMessages = append(tmpMessages, messages.AttackMessage)
 			anyMessages = true
 			messages.AttackMessage = ""
 		}
 	}
-	for _, m := range g.World.Query(g.WorldTags["messengers"]) {
-		messages := m.Components[userMessage].(*UserMessage)
+	for _, m := range g.World.QueryMessengers() {
+		messages := g.World.GetUserMessage(m)
 		if messages.DeadMessage != "" {
 			tmpMessages = append(tmpMessages, messages.DeadMessage)
 			anyMessages = true

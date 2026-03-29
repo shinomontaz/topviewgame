@@ -8,9 +8,9 @@ func DrawRenderables(g *Game, l Level, screen *ebiten.Image, viewport Rect) {
 	offsetX := float64(viewport.X1 * tileWidth)
 	offsetY := float64(viewport.Y1 * tileHeight)
 
-	for _, result := range g.World.Query(g.WorldTags["renderables"]) {
-		pos := result.Components[positionC].(*Position)
-		img := result.Components[renderableC].(Renderable).GetImage()
+	for _, result := range g.World.QueryRenderables() {
+		pos := g.World.GetPosition(result)
+		img := g.World.GetRenderable(result).(Renderable).GetImage()
 
 		if l.PlayerVisible.IsVisible(pos.X, pos.Y) {
 			index := l.GetIndexFromXY(pos.X, pos.Y)

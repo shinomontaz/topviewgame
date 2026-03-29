@@ -11,16 +11,16 @@ func UpdateMonsters(g *Game) {
 	playerPosition := Position{}
 	var player *Player
 
-	for _, plr := range g.World.Query(g.WorldTags["players"]) {
-		pos := plr.Components[positionC].(*Position)
-		player = plr.Components[playerC].(*Player)
+	for _, plr := range g.World.QueryPlayers() {
+		pos := g.World.GetPosition(plr)
+		player = g.World.GetPlayer(plr).(*Player)
 		playerPosition.X = pos.X
 		playerPosition.Y = pos.Y
 	}
 
-	for _, result := range g.World.Query(g.WorldTags["monsters"]) {
-		pos := result.Components[positionC].(*Position)
-		mon := result.Components[monsterC].(*Monster)
+	for _, result := range g.World.QueryMonsters() {
+		pos := g.World.GetPosition(result)
+		mon := g.World.GetMonster(result).(*Monster)
 		if mon.IsDead() {
 			continue
 		}
@@ -33,7 +33,7 @@ func UpdateMonsters(g *Game) {
 				ProcessAttacks(g, pos, &playerPosition)
 				dx := playerPosition.X - pos.X
 				mon.SetAttacking(dx)
-				if result.Components[healthC].(*Health).Current <= 0 {
+				if g.World.GetHealth(result).Current <= 0 {
 					t := l.Tiles[l.GetIndexFromXY(pos.X, pos.Y)]
 					t.Blocked = false
 				}

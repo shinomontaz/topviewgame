@@ -20,7 +20,7 @@ func getDirection(g *Game, ev event.Event) (int, int) {
 }
 
 func UpdatePlayer(g *Game) {
-	players := g.WorldTags["players"]
+	players := g.World.QueryPlayers()
 	level := g.Map.CurrentLevel
 	ev := g.PlayerController.GetEvent()
 
@@ -89,9 +89,9 @@ func UpdatePlayer(g *Game) {
 		return
 	}
 
-	for _, result := range g.World.Query(players) {
-		pos := result.Components[positionC].(*Position)
-		player := result.Components[playerC].(*Player)
+	for _, result := range players {
+		pos := g.World.GetPosition(result)
+		player := g.World.GetPlayer(result).(*Player)
 
 		newX := pos.X + dx
 		newY := pos.Y + dy

@@ -6,8 +6,8 @@ func UpdateCursor(g *Game) {
 	x, y := g.PlayerController.GetCursor()
 	gd := g.GetData()
 	viewport := g.Viewport()
-	for _, res := range g.World.Query(g.WorldTags["cursors"]) {
-		cursor := res.Components[cursorC].(*Cursor)
+	for _, res := range g.World.QueryCursors() {
+		cursor := g.World.GetCursor(res).(*Cursor)
 		cursor.Update(x, y, viewport, gd.TileWidth, gd.TileHeight)
 
 		mx, my := cursor.MapPos()
@@ -22,8 +22,8 @@ func UpdateCursor(g *Game) {
 }
 
 func DrawCursor(g *Game, screen *ebiten.Image) {
-	for _, res := range g.World.Query(g.WorldTags["cursors"]) {
-		cursor := res.Components[cursorC].(*Cursor)
+	for _, res := range g.World.QueryCursors() {
+		cursor := g.World.GetCursor(res).(*Cursor)
 
 		if cursor.state == CursorDefault {
 			op1 := &ebiten.DrawImageOptions{}

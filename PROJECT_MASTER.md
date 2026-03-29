@@ -42,6 +42,30 @@
 
 ## 🏗️ Architecture Analysis
 
+### **Current Structure (After World Facade Refactor)**
+- **Core Package:** `internal/core` - Position, Rect, GameData types
+- **World Package:** `internal/world` - ECS facade with clean API  
+- **Main Package:** Game logic with reduced ECS coupling
+- **Facade Pattern:** World interface hides ECS complexity
+
+### **World Facade Pattern Implementation**
+```go
+// Before: Direct ECS exposure
+g.WorldManager.Manager.Query(g.WorldManager.Tags["players"])
+pos := result.Components[g.WorldManager.PositionC].(*Position)
+
+// After: Clean facade API  
+for _, player := range g.World.QueryPlayers() {
+    pos := g.World.GetPosition(player)
+}
+```
+
+**Benefits Achieved:**
+- **Encapsulation:** ECS manager hidden behind World interface
+- **Type Safety:** Typed methods like `QueryPlayers()`, `GetHealth()`
+- **Maintainability:** Easy to swap ECS libraries without client changes
+- **Clean API:** `g.World.QueryMonsters()` vs `g.WorldManager.Manager.Query(tags)`
+
 ### **Current Structure & Responsibilities**
 
 #### **Package Organization:**
@@ -110,9 +134,9 @@
 ### **Maximum Improvement Program (Long-term Roadmap)**
 
 #### **Phase 1: Foundation (Months 1-2)**
-1. **Modularize packages** 🎯 **NEXT PRIORITY**
-   - **1a.** Extract data types (Position, Rect, GameData) → `internal/core`
-   - **1b.** Move ECS initialization → `internal/world` package
+1. **Modularize packages** 🎯 **IN PROGRESS**
+   - **1a.** ✅ **DONE** Extract data types (Position, Rect, GameData) → `internal/core`
+   - **1b.** ✅ **DONE** Move ECS initialization → `internal/world` package
    - **1c.** Shift rendering systems → `internal/render` (incremental: DrawRenderables → HUD → UserLog → Cursor/Path)
    - **1d.** Relocate controller implementation with interface injection
 
@@ -177,11 +201,13 @@
 - ✅ **Architecture analysis completed** - Comprehensive technical debt assessment
 - ✅ **MVP program 87.5% complete** - 7/8 foundational improvements done
 - ✅ **Improvement roadmap finalized** - Detailed phase-based plan
+- ✅ **ECS modularization Phase 1a-1b** - Extracted core types and world management
+- ✅ **World Facade Pattern implemented** - Clean API over ECS complexity
 
 ### **Current Sprint Goals**
 - 🎯 **Complete MVP Item #6** - Add unit tests for AStar.GetPath and TileLine
-- 🎯 **Begin Phase 1.1a** - Extract core data types to internal/core package
-- 🎯 **Update documentation** - Reflect recent auto-movement improvements
+- 🎯 **Continue Phase 1.1c** - Extract rendering systems to internal/render package
+- 🎯 **Phase 1.1d** - Relocate controller implementation with interface injection
 
 ### **Key Metrics**
 - **Codebase:** 36 Go files, ~15K lines

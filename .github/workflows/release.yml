@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  
+jobs:
+  build:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23.8'
+
+    - name: Build binaries
+      run: |
+        # Windows
+        GOOS=windows GOARCH=amd64 go build -o game-windows-amd64.exe
+        
+        # Linux
+        GOOS=linux GOARCH=amd64 go build -o game-linux-amd64
+        
+        # macOS
+        GOOS=darwin GOARCH=amd64 go build -o game-darwin-amd64
+        GOOS=darwin GOARCH=arm64 go build -o game-darwin-arm64
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          game-windows-amd64.exe
+          game-linux-amd64
+          game-darwin-amd64
+          game-darwin-arm64
+          DESCRIPTION.md
+        body: |
+          ## Установка
+          Скачайте бинарник для вашей ОС
+          
+          ## Поддерживаемые платформы
+          - Windows (amd64)
+          - Linux (amd64)
+          - macOS (Intel и Apple Silicon)
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
