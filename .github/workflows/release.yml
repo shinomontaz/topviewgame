@@ -54,11 +54,28 @@ jobs:
         GOARCH: ${{ matrix.goarch }}
       run: go build -o ${{ matrix.output }}
 
+    - name: Create release package
+      run: |
+        mkdir -p release
+        cp ${{ matrix.output }} release/
+        cp -r assets release/
+        cp DESCRIPTION.md release/
+        cp screen.png release/
+
+    - name: Create archive
+      run: |
+        if [ "${{ matrix.goos }}" = "windows" ]; then
+          cd release && zip -r ../game-${{ matrix.goos }}-${{ matrix.goarch }}.zip . && cd ..
+        else
+          cd release && tar -czf ../game-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz . && cd ..
+        fi
+      shell: bash
+
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.output }}
-        path: ${{ matrix.output }}
+        name: game-${{ matrix.goos }}-${{ matrix.goarch }}
+        path: game-${{ matrix.goos }}-${{ matrix.goarch }}.*
 
   release:
     needs: build
@@ -72,24 +89,27 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         path: artifacts
-        
+          
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          artifacts/game-windows-amd64.exe/game-windows-amd64.exe
-          artifacts/game-linux-amd64/game-linux-amd64
-          artifacts/game-darwin-amd64/game-darwin-amd64
-          artifacts/game-darwin-arm64/game-darwin-arm64
-          DESCRIPTION.md
-          screen.png
+          artifacts/game-windows-amd64/game-windows-amd64.zip
+          artifacts/game-linux-amd64/game-linux-amd64.tar.gz
+          artifacts/game-darwin-amd64/game-darwin-amd64.tar.gz
+          artifacts/game-darwin-arm64/game-darwin-arm64.tar.gz
         body: |
           ## Установка
-          Скачайте бинарник для вашей ОС
+          
+          1. Скачайте архив для вашей ОС
+          2. Распакуйте архив
+          3. Запустите исполняемый файл
+          
+          Архив содержит: бинарник + assets + описание
           
           ## Поддерживаемые платформы
-          - Windows (amd64)
-          - Linux (amd64)
-          - macOS (Intel и Apple Silicon)
+          - Windows (amd64) - .zip
+          - Linux (amd64) - .tar.gz
+          - macOS (Intel и Apple Silicon) - .tar.gz
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
