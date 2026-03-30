@@ -62,13 +62,15 @@ jobs:
         cp DESCRIPTION.md release/
         cp screen.png release/
 
-    - name: Create archive
-      run: |
-        if [ "${{ matrix.goos }}" = "windows" ]; then
-          cd release && zip -r ../game-${{ matrix.goos }}-${{ matrix.goarch }}.zip . && cd ..
-        else
-          cd release && tar -czf ../game-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz . && cd ..
-        fi
+
+    - name: Create archive (Windows)
+      if: matrix.goos == 'windows'
+      run: Compress-Archive -Path release\* -DestinationPath game-${{ matrix.goos }}-${{ matrix.goarch }}.zip
+      shell: pwsh
+
+    - name: Create archive (Unix)
+      if: matrix.goos != 'windows'
+      run: cd release && tar -czf ../game-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz . && cd ..
       shell: bash
 
     - name: Upload artifact
