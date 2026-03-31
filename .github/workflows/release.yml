@@ -24,10 +24,6 @@ jobs:
             output: game-linux-amd64
           - os: macos-latest
             goos: darwin
-            goarch: amd64
-            output: game-darwin-amd64
-          - os: macos-latest
-            goos: darwin
             goarch: arm64
             output: game-darwin-arm64
     
@@ -98,7 +94,6 @@ jobs:
         files: |
           artifacts/game-windows-amd64/game-windows-amd64.zip
           artifacts/game-linux-amd64/game-linux-amd64.tar.gz
-          artifacts/game-darwin-amd64/game-darwin-amd64.tar.gz
           artifacts/game-darwin-arm64/game-darwin-arm64.tar.gz
         body: |
           ## Установка
@@ -112,6 +107,6 @@ jobs:
           ## Поддерживаемые платформы
           - Windows (amd64) - .zip
           - Linux (amd64) - .tar.gz
-          - macOS (Intel и Apple Silicon) - .tar.gz
+          - macOS (Apple Silicon) - .tar.gz
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
