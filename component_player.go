@@ -54,6 +54,10 @@ func NewPlayer() *Player {
 	return pl
 }
 
+func (p *Player) GetOffset(tileW, tileH int) (float64, float64) {
+	return float64((48 - tileW) / 2), float64(48 - tileH)
+}
+
 func (p *Player) GetImage() *ebiten.Image {
 	frame := p.state.GetFrame()
 	if p.dir == -1 {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	_ "image/png"
 	"log"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"topviewgame/event"
 	"topviewgame/internal/world"
 
+	"github.com/bytearena/ecs"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -25,7 +27,6 @@ type Game struct {
 	last             time.Time
 	PlayerController controllable
 	gd               *GameData
-	gm               *GameMap
 	Center           Position
 	viewport         Rect
 
@@ -40,17 +41,16 @@ type Game struct {
 
 func NewGame() *Game {
 	gd := NewGameData()
-	m := NewGameMap(gd)
-	gameWorld := world.NewWorld()
-	
-	// Initialize entities using the old logic for now
-	// This will be refactored in the next step
-	InitializeWorldEntities(gameWorld, m)
-
 	pathVis, err := NewPathVisualizer()
 	if err != nil {
 		log.Println("Path visualization disabled:", err)
 	}
+	m := NewGameMap(gd)
+	gameWorld := world.NewWorld()
+
+	// Initialize entities using the old logic for now
+	// This will be refactored in the next step
+	InitializeWorldEntities(gameWorld, m)
 
 	return &Game{
 		PlayerController: controller.Human{TileWidth: gd.TileWidth, TileHeight: gd.TileHeight},
@@ -60,7 +60,6 @@ func NewGame() *Game {
 		TurnCounter:      0,
 		last:             time.Now(),
 		gd:               &gd,
-		gm:               &m,
 		AutoMoveDelay:    0.2, // 200ms delay between auto-movement steps
 		PathVisualizer:   pathVis,
 	}
@@ -71,8 +70,21 @@ func NewGame() *Game {
 func InitializeWorldEntities(w *world.World, gm GameMap) {
 	startingRoom := gm.CurrentLevel.Rooms[0]
 
+	stairsComponent, err := NewStairs(gm.Gd.TileWidth, gm.Gd.TileHeight)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	stairsComponent.NextLevel = gm.LevelIndex + 1
+	stairsPos := gm.CurrentLevel.StairsPos
+
 	playerX, playerY := startingRoom.Center()
 	player := NewPlayer()
+	w.NewEntity().
+		AddComponent(w.StairsComponent(), stairsComponent).
+		AddComponent(w.RenderableComponent(), stairsComponent).
+		AddComponent(w.PositionComponent(), &Position{X: stairsPos.X, Y: stairsPos.Y})
+
 	w.NewEntity().
 		AddComponent(w.PlayerComponent(), player).
 		AddComponent(w.RenderableComponent(), player).
@@ -282,6 +294,24 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	DrawUserLog(g, screen)
 	DrawHUD(g, screen)
 	DrawCursor(g, screen)
+}
+
+func (g *Game) NextLevel(level int) {
+	fmt.Printf("Going to next level %d\n", level)
+
+	g.Map.LevelIndex = level
+	g.Map.CurrentLevel = NewLevel(*g.gd)
+	g.Map.monsterPositions = make(map[Position]*ecs.Entity)
+
+	gameWorld := world.NewWorld()
+
+	InitializeWorldEntities(gameWorld, g.Map)
+
+	g.StopAutoMove()
+
+	g.World = gameWorld
+	g.TurnCounter = 0
+	g.last = time.Now()
 }
 
 func main() {

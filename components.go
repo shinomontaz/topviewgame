@@ -10,6 +10,7 @@ type Position = core.Position
 
 type Renderable interface {
 	GetImage() *ebiten.Image
+	GetOffset(tileW, tileH int) (float64, float64)
 }
 
 type Movable struct {

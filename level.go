@@ -14,6 +14,7 @@ type TileType int
 const (
 	WALL TileType = iota
 	FLOOR
+	STAIRS
 )
 
 type MapTile struct {
@@ -34,6 +35,7 @@ type Level struct {
 	PlayerVisible *fov.View
 	shader        *ebiten.Shader
 	OffScreen     *ebiten.Image
+	StairsPos     Position
 }
 
 func NewLevel(gd GameData) Level {
@@ -128,6 +130,23 @@ func (l *Level) build() {
 			}
 		}
 	}
+
+	choosedRoom := l.Rooms[rnd.Intn(len(l.Rooms))]
+	stairPos := Position{
+		X: choosedRoom.X1 + 1 + rnd.Intn(choosedRoom.X2-choosedRoom.X1-1),
+		Y: choosedRoom.Y1 + 1 + rnd.Intn(choosedRoom.Y2-choosedRoom.Y1-1),
+	}
+	l.addStairs(stairPos)
+
+}
+
+func (l *Level) addStairs(pos Position) {
+	index := l.GetIndexFromXY(pos.X, pos.Y)
+
+	l.Tiles[index].Blocked = false
+	l.Tiles[index].TileType = STAIRS
+
+	l.StairsPos = pos
 }
 
 func (l *Level) addRoom(room Rect) {

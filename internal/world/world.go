@@ -1,8 +1,9 @@
 package world
 
 import (
-	"github.com/bytearena/ecs"
 	"topviewgame/internal/core"
+
+	"github.com/bytearena/ecs"
 )
 
 // World provides a clean facade over the ECS system
@@ -10,7 +11,7 @@ import (
 type World struct {
 	manager *ecs.Manager
 	tags    map[string]ecs.Tag
-	
+
 	// Private component references - not exposed to client code
 	positionC    *ecs.Component
 	renderableC  *ecs.Component
@@ -22,17 +23,18 @@ type World struct {
 	nameC        *ecs.Component
 	cursorC      *ecs.Component
 	userMessageC *ecs.Component
+	stairsC      *ecs.Component
 }
 
 // NewWorld creates a new ECS world with all components initialized
 func NewWorld() *World {
 	manager := ecs.NewManager()
-	
+
 	w := &World{
 		manager: manager,
 		tags:    make(map[string]ecs.Tag),
 	}
-	
+
 	// Initialize all components (private)
 	w.playerC = manager.NewComponent()
 	w.positionC = manager.NewComponent()
@@ -45,14 +47,16 @@ func NewWorld() *World {
 	w.nameC = manager.NewComponent()
 	w.userMessageC = manager.NewComponent()
 	w.cursorC = manager.NewComponent()
-	
+	w.stairsC = manager.NewComponent()
+
 	// Build tags (private)
 	w.tags["monsters"] = ecs.BuildTag(w.monsterC, w.positionC, w.healthC, w.meleeWeaponC, w.armorC, w.nameC, w.userMessageC)
 	w.tags["players"] = ecs.BuildTag(w.playerC, w.positionC, w.healthC, w.meleeWeaponC, w.armorC, w.nameC, w.userMessageC)
 	w.tags["renderables"] = ecs.BuildTag(w.renderableC, w.positionC)
 	w.tags["messengers"] = ecs.BuildTag(w.userMessageC)
 	w.tags["cursors"] = ecs.BuildTag(w.cursorC)
-	
+	w.tags["stairs"] = ecs.BuildTag(w.stairsC, w.positionC, w.renderableC)
+
 	return w
 }
 
@@ -81,6 +85,10 @@ func (w *World) QueryMessengers() []*ecs.QueryResult {
 // QueryCursors returns all cursor entities
 func (w *World) QueryCursors() []*ecs.QueryResult {
 	return w.manager.Query(w.tags["cursors"])
+}
+
+func (w *World) QueryStairs() []*ecs.QueryResult {
+	return w.manager.Query(w.tags["stairs"])
 }
 
 // GetPlayerCenter returns the center position of the player
@@ -133,22 +141,27 @@ func (w *World) GetCursor(entity *ecs.QueryResult) interface{} {
 	return entity.Components[w.cursorC]
 }
 
+func (w *World) GetStairs(entity *ecs.QueryResult) interface{} {
+	return entity.Components[w.stairsC]
+}
+
 // Entity creation method
 func (w *World) NewEntity() *ecs.Entity {
 	return w.manager.NewEntity()
 }
 
 // Component access for entity creation (temporary - will be replaced with builder pattern)
-func (w *World) PlayerComponent() *ecs.Component { return w.playerC }
-func (w *World) PositionComponent() *ecs.Component { return w.positionC }
-func (w *World) RenderableComponent() *ecs.Component { return w.renderableC }
-func (w *World) MonsterComponent() *ecs.Component { return w.monsterC }
-func (w *World) HealthComponent() *ecs.Component { return w.healthC }
+func (w *World) PlayerComponent() *ecs.Component      { return w.playerC }
+func (w *World) PositionComponent() *ecs.Component    { return w.positionC }
+func (w *World) RenderableComponent() *ecs.Component  { return w.renderableC }
+func (w *World) MonsterComponent() *ecs.Component     { return w.monsterC }
+func (w *World) HealthComponent() *ecs.Component      { return w.healthC }
 func (w *World) MeleeWeaponComponent() *ecs.Component { return w.meleeWeaponC }
-func (w *World) ArmorComponent() *ecs.Component { return w.armorC }
-func (w *World) NameComponent() *ecs.Component { return w.nameC }
+func (w *World) ArmorComponent() *ecs.Component       { return w.armorC }
+func (w *World) NameComponent() *ecs.Component        { return w.nameC }
 func (w *World) UserMessageComponent() *ecs.Component { return w.userMessageC }
-func (w *World) CursorComponent() *ecs.Component { return w.cursorC }
+func (w *World) CursorComponent() *ecs.Component      { return w.cursorC }
+func (w *World) StairsComponent() *ecs.Component      { return w.stairsC }
 
 // Component types - moved from main package for better organization
 type Health struct {

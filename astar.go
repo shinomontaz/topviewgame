@@ -65,7 +65,8 @@ func (as AStar) GetPath(l Level, start, end *Position) []Position {
 			}
 
 			tile := l.TileAt(neighbor.X, neighbor.Y)
-			if tile == nil || tile.TileType == WALL {
+			isTarget := neighbor.X == end.X && neighbor.Y == end.Y
+			if tile == nil || tile.TileType == WALL || (tile.TileType == STAIRS && !isTarget ){
 				continue
 			}
 

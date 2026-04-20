@@ -121,6 +121,15 @@ func UpdatePlayer(g *Game) {
 		level.PlayerVisible.Compute(level, pos.X, pos.Y, 8)
 
 		if hasMoved {
+			if level.Tiles[index].TileType == STAIRS {
+				for _, stairs := range g.World.QueryStairs() {
+					stairsPos := g.World.GetPosition(stairs)
+					if stairsPos.X == newX && stairsPos.Y == newY {
+						g.World.GetStairs(stairs).(*Stairs).Handle(g)
+					}
+				}
+			}
+
 			g.Turn = GetNextState(g.Turn)
 			g.TurnCounter = 0
 		}

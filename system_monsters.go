@@ -58,7 +58,7 @@ func UpdateMonsters(g *Game) {
 					pos.Y = path[1].Y
 					l.Tiles[l.GetIndexFromXY(pos.X, pos.Y)].Blocked = true
 
-					g.gm.updateMonsterPosition(result.Entity, &oldPos, pos)
+					g.Map.updateMonsterPosition(result.Entity, &oldPos, pos)
 				}
 			}
 		}

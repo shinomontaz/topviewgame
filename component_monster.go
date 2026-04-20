@@ -69,6 +69,10 @@ func NewMonster(t MonsterType) *Monster {
 	return pl
 }
 
+func (p *Monster) GetOffset(tileW, tileH int) (float64, float64) {
+	return float64((48 - tileW) / 2), float64(48 - tileH)
+}
+
 func (p *Monster) GetImage() *ebiten.Image {
 	return p.state.GetFrame()
 }

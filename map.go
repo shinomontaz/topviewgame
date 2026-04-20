@@ -3,7 +3,7 @@ package main
 import "github.com/bytearena/ecs"
 
 type GameMap struct {
-	Dungeons     []Dungeon
+	LevelIndex   int
 	CurrentLevel Level
 	Gd           GameData
 
@@ -12,12 +12,8 @@ type GameMap struct {
 
 func NewGameMap(gd GameData) GameMap {
 	l := NewLevel(gd)
-	d := Dungeon{
-		Name:   "Dungeon 1",
-		Levels: []Level{l},
-	}
 	gm := GameMap{
-		Dungeons:         []Dungeon{d},
+		LevelIndex:       1,
 		CurrentLevel:     l,
 		Gd:               gd,
 		monsterPositions: make(map[Position]*ecs.Entity),
