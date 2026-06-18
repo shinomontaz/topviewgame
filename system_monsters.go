@@ -53,16 +53,18 @@ func UpdateMonsters(g *Game) {
 				nextTile := l.Tiles[l.GetIndexFromXY(path[1].X, path[1].Y)]
 				if !nextTile.Blocked {
 					oldPos := *pos
+					dx := path[1].X - pos.X
 					l.Tiles[l.GetIndexFromXY(pos.X, pos.Y)].Blocked = false
 					pos.X = path[1].X
 					pos.Y = path[1].Y
 					l.Tiles[l.GetIndexFromXY(pos.X, pos.Y)].Blocked = true
 
+					mon.SetMoved(dx)
 					g.Map.updateMonsterPosition(result.Entity, &oldPos, pos)
 				}
 			}
 		}
 	}
 
-	g.Turn = PlayerTurn
+	g.Turn = EnemyAnimating
 }

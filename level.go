@@ -314,6 +314,7 @@ func (l *Level) ClosestVisibleOnLine(a, b Position) Position {
 			break
 		}
 	}
+
 	return lastVisible
 }
 

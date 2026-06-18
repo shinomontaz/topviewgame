@@ -23,6 +23,10 @@ func Death(o owner, frames []*ebiten.Image) *DeathState {
 	}
 }
 
+func (s *DeathState) IsBusy() bool {
+	return !s.isPlayed
+}
+
 func (s *DeathState) GetId() int { return s.id }
 func (s *DeathState) Start() {
 }

@@ -23,6 +23,10 @@ func Idle(o owner, frames []*ebiten.Image) *IdleState {
 	}
 }
 
+func (s *IdleState) IsBusy() bool {
+	return false
+}
+
 func (s *IdleState) GetId() int { return s.id }
 func (s *IdleState) Start() {
 	s.index = 0

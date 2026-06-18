@@ -22,6 +22,10 @@ func Stand(o owner, frames []*ebiten.Image) *StandState {
 	}
 }
 
+func (s *StandState) IsBusy() bool {
+	return false
+}
+
 func (s *StandState) GetId() int { return s.id }
 func (s *StandState) Start() {
 	s.index = 0

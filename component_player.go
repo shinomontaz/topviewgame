@@ -15,6 +15,7 @@ type stater interface {
 	Update(dt float64)
 	GetFrame() *ebiten.Image
 	NextState() (int, bool)
+	IsBusy() bool
 }
 
 type Player struct {
@@ -47,7 +48,7 @@ func NewPlayer() *Player {
 		state.IDLE:   state.Idle(pl, animMap[state.IDLE]),
 		state.DEATH:  state.Death(pl, animMap[state.DEATH]),
 		state.ATTACK: state.Attack(pl, animMap[state.ATTACK]),
-		state.WALK:   state.Attack(pl, animMap[state.WALK]),
+		state.WALK:   state.Walk(pl, animMap[state.WALK]),
 	}
 
 	pl.SetState(state.STAND)
@@ -83,7 +84,7 @@ func (p *Player) SetState(newId int) {
 func (p *Player) SetMoved(dir int) {
 	p.lastMove = 0
 	p.dir = dir
-	p.SetState(state.STAND)
+	p.SetState(state.WALK)
 }
 
 func (p *Player) SetAttacking(dir int) {

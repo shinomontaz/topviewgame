@@ -62,7 +62,7 @@ func NewMonster(t MonsterType) *Monster {
 		state.IDLE:   state.Idle(pl, animMap[state.IDLE]),
 		state.DEATH:  state.Death(pl, animMap[state.DEATH]),
 		state.ATTACK: state.Attack(pl, animMap[state.ATTACK]),
-		state.WALK:   state.Attack(pl, animMap[state.WALK]),
+		state.WALK:   state.Walk(pl, animMap[state.WALK]),
 	}
 
 	pl.SetState(state.STAND)
@@ -85,9 +85,10 @@ func (p *Monster) SetState(newId int) {
 	p.state.Start()
 }
 
-func (p *Monster) SetMoved() {
+func (p *Monster) SetMoved(dx int) {
 	p.lastMove = 0
-	p.SetState(state.STAND)
+	p.dir = dx
+	p.SetState(state.WALK)
 }
 
 func (p *Monster) SetAttacking(dir int) {

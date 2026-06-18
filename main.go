@@ -53,7 +53,7 @@ func NewGame() *Game {
 	InitializeWorldEntities(gameWorld, m)
 
 	return &Game{
-		PlayerController: controller.Human{TileWidth: gd.TileWidth, TileHeight: gd.TileHeight},
+		PlayerController: &controller.Human{TileWidth: gd.TileWidth, TileHeight: gd.TileHeight},
 		Map:              m,
 		World:            gameWorld,
 		Turn:             PlayerTurn,
@@ -207,17 +207,51 @@ func (g *Game) Update() error {
 	UpdateCursor(g)
 	g.UpdateAutoMoveTimer(g.dt) // Update auto-movement timer
 
-	g.TurnCounter++
-	if g.Turn == PlayerTurn && g.TurnCounter > 10 {
-		UpdatePlayer(g)
-	}
-	if g.Turn == EnemyTurn {
+	switch g.Turn {
+	case PlayerTurn:
+		g.TurnCounter++
+		if g.TurnCounter > 10 {
+			UpdatePlayer(g)
+		}
+	case PlayerAnimating:
+		if !g.isPlayerBusy() {
+			g.Turn = EnemyTurn
+			g.TurnCounter = 0
+		}
+	case EnemyTurn:
 		UpdateMonsters(g)
-	}
+	case EnemyAnimating:
+		if !g.isMonstersBusy() {
+			g.Turn = PlayerTurn
+			g.TurnCounter = 0
+		}
+	case GameOver:
 
-	g.Turn = PlayerTurn
+	}
 
 	return nil
+}
+
+func (g *Game) isPlayerBusy() bool {
+	for _, p := range g.World.QueryPlayers() {
+		pl := g.World.GetPlayer(p).(*Player)
+		if pl.state.IsBusy() {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (g *Game) isMonstersBusy() bool {
+	for _, m := range g.World.QueryMonsters() {
+		mm := g.World.GetMonster(m).(*Monster)
+		if !mm.IsDead() && mm.state.IsBusy() {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (g *Game) GetViewport() Rect {

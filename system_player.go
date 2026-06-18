@@ -31,8 +31,8 @@ func UpdatePlayer(g *Game) {
 
 	// Handle manual input first
 	if ev.Type == event.EventPass {
-		g.Turn = GetNextState(g.Turn)
-		g.TurnCounter = 0
+		g.Turn = EnemyTurn
+
 		return
 	}
 
@@ -130,8 +130,7 @@ func UpdatePlayer(g *Game) {
 				}
 			}
 
-			g.Turn = GetNextState(g.Turn)
-			g.TurnCounter = 0
+			g.Turn = PlayerAnimating
 		}
 
 		g.SetCenter(*pos)

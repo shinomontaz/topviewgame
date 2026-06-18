@@ -13,7 +13,7 @@ type Human struct {
 	err                   error
 }
 
-func (h Human) Draw(screen *ebiten.Image) {
+func (h *Human) Draw(screen *ebiten.Image) {
 	if h.cursorImg == nil {
 		h.cursorImg, _, h.err = ebitenutil.NewImageFromFile("assets/cursor.png")
 		if h.err != nil {
@@ -36,7 +36,7 @@ func (h Human) Draw(screen *ebiten.Image) {
 	screen.DrawImage(h.cursorImg, op)
 }
 
-func (h Human) GetEvent() event.Event {
+func (h *Human) GetEvent() event.Event {
 	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
 		return event.Event{Type: event.EventKey, Pos: [2]int{0, -1}}
 	}
@@ -61,6 +61,6 @@ func (h Human) GetEvent() event.Event {
 	return event.Event{Type: event.EventNone}
 }
 
-func (h Human) GetCursor() (int, int) {
+func (h *Human) GetCursor() (int, int) {
 	return ebiten.CursorPosition()
 }

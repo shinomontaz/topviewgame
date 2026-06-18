@@ -24,6 +24,10 @@ func Attack(o owner, frames []*ebiten.Image) *AttackState {
 	}
 }
 
+func (s *AttackState) IsBusy() bool {
+	return !s.finished
+}
+
 func (s *AttackState) GetId() int { return s.id }
 func (s *AttackState) Start() {
 	s.index = 0

@@ -5,7 +5,9 @@ type TurnState int
 const (
 	BeforePlayerAction TurnState = iota
 	PlayerTurn
+	PlayerAnimating
 	EnemyTurn
+	EnemyAnimating
 	GameOver
 )
 
