@@ -15,7 +15,8 @@ type Monster struct {
 	frame    int
 	time     float64
 	lastMove float64
-	dir      int
+	dx       int
+	dy       int
 
 	CachedPath    []Position
 	LastPlayerPos Position
@@ -69,12 +70,15 @@ func NewMonster(t MonsterType) *Monster {
 	return pl
 }
 
-func (p *Monster) GetOffset(tileW, tileH int) (float64, float64) {
-	return float64((48 - tileW) / 2), float64(48 - tileH)
-}
+func (p *Monster) GetImage(tileW, tileH int) Image {
+	frame := p.state.GetFrame()
+	geom, h := p.state.GetTransform(tileW, tileH)
+	if p.dx == -1 {
+		geom.Scale(-1, 1)
+		geom.Translate(float64(frame.Bounds().Dx()), 0)
+	}
 
-func (p *Monster) GetImage() *ebiten.Image {
-	return p.state.GetFrame()
+	return Image{Image: frame, GeoM: geom, Height: h}
 }
 
 func (p *Monster) SetState(newId int) {
@@ -85,15 +89,21 @@ func (p *Monster) SetState(newId int) {
 	p.state.Start()
 }
 
-func (p *Monster) SetMoved(dx int) {
+func (p *Monster) GetDirection() (int, int) {
+	return p.dx, p.dy
+}
+
+func (p *Monster) SetMoved(dx, dy int) {
 	p.lastMove = 0
-	p.dir = dx
+	p.dx = dx
+	p.dy = dy
 	p.SetState(state.WALK)
 }
 
-func (p *Monster) SetAttacking(dir int) {
+func (p *Monster) SetAttacking(dx, dy int) {
 	p.lastMove = 0
-	p.dir = dir
+	p.dx = dx
+	p.dy = dy
 	p.SetState(state.ATTACK)
 }
 

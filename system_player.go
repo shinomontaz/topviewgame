@@ -102,14 +102,14 @@ func UpdatePlayer(g *Game) {
 				level.Tiles[level.GetIndexFromXY(pos.X, pos.Y)].Blocked = false
 				pos.X = newX
 				pos.Y = newY
-				player.SetMoved(dx)
+				player.SetMoved(dx, dy)
 				hasMoved = true
 				level.Tiles[index].Blocked = true
 			} else if level.Tiles[index].TileType != WALL {
 				// Hit a monster - stop auto-movement and attack
 				g.StopAutoMove()
 				monsterPos := Position{X: newX, Y: newY}
-				player.SetAttacking(dx)
+				player.SetAttacking(dx, dy)
 				ProcessAttacks(g, pos, &monsterPos)
 				hasMoved = true
 			} else {

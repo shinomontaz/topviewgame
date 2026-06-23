@@ -12,6 +12,7 @@ type IdleState struct {
 	index    int
 	timer    float64
 	o        owner
+	size     int
 	isPlayed bool
 }
 
@@ -19,6 +20,7 @@ func Idle(o owner, frames []*ebiten.Image) *IdleState {
 	return &IdleState{
 		id:     IDLE,
 		frames: frames,
+		size:   frames[0].Bounds().Dx(),
 		o:      o,
 	}
 }
@@ -33,8 +35,19 @@ func (s *IdleState) Start() {
 	s.timer = 0
 	s.isPlayed = false
 }
+
 func (s *IdleState) GetFrame() *ebiten.Image {
 	return s.frames[s.index]
+}
+
+func (s *IdleState) GetTransform(tW, tH int) (ebiten.GeoM, float64) {
+	cW := float64((s.size - tW) / 2)
+	cH := float64(s.size - tH)
+
+	g := ebiten.GeoM{}
+	g.Translate(-cW, -cH)
+
+	return g, 0
 }
 
 func (s *IdleState) Update(dt float64) {

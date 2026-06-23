@@ -32,7 +32,8 @@ func UpdateMonsters(g *Game) {
 				player.SetState(state.STAND)
 				ProcessAttacks(g, pos, &playerPosition)
 				dx := playerPosition.X - pos.X
-				mon.SetAttacking(dx)
+				dy := playerPosition.Y - pos.Y
+				mon.SetAttacking(dx, dy)
 				if g.World.GetHealth(result).Current <= 0 {
 					t := l.Tiles[l.GetIndexFromXY(pos.X, pos.Y)]
 					t.Blocked = false
@@ -54,12 +55,13 @@ func UpdateMonsters(g *Game) {
 				if !nextTile.Blocked {
 					oldPos := *pos
 					dx := path[1].X - pos.X
+					dy := path[1].Y - pos.Y
 					l.Tiles[l.GetIndexFromXY(pos.X, pos.Y)].Blocked = false
 					pos.X = path[1].X
 					pos.Y = path[1].Y
 					l.Tiles[l.GetIndexFromXY(pos.X, pos.Y)].Blocked = true
 
-					mon.SetMoved(dx)
+					mon.SetMoved(dx, dy)
 					g.Map.updateMonsterPosition(result.Entity, &oldPos, pos)
 				}
 			}

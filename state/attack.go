@@ -12,6 +12,7 @@ type AttackState struct {
 	timer    float64
 	frames   []*ebiten.Image
 	finished bool
+	size     int
 	o        owner
 }
 
@@ -19,6 +20,7 @@ func Attack(o owner, frames []*ebiten.Image) *AttackState {
 	return &AttackState{
 		id:       ATTACK,
 		frames:   frames,
+		size:     frames[0].Bounds().Dx(),
 		finished: false,
 		o:        o,
 	}
@@ -37,6 +39,16 @@ func (s *AttackState) Start() {
 
 func (s *AttackState) GetFrame() *ebiten.Image {
 	return s.frames[s.index]
+}
+
+func (s *AttackState) GetTransform(tW, tH int) (ebiten.GeoM, float64) {
+	cW := float64((s.size - tW) / 2)
+	cH := float64(s.size - tH)
+
+	g := ebiten.GeoM{}
+	g.Translate(-cW, -cH)
+
+	return g, 0
 }
 
 func (s *AttackState) Update(dt float64) {

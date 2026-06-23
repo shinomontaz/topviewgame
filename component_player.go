@@ -14,6 +14,7 @@ type stater interface {
 	Start()
 	Update(dt float64)
 	GetFrame() *ebiten.Image
+	GetTransform(int, int) (ebiten.GeoM, float64)
 	NextState() (int, bool)
 	IsBusy() bool
 }
@@ -24,7 +25,8 @@ type Player struct {
 	frame    int
 	time     float64
 	lastMove float64
-	dir      int
+	dx       int
+	dy       int
 }
 
 func NewPlayer() *Player {
@@ -55,22 +57,15 @@ func NewPlayer() *Player {
 	return pl
 }
 
-func (p *Player) GetOffset(tileW, tileH int) (float64, float64) {
-	return float64((48 - tileW) / 2), float64(48 - tileH)
-}
-
-func (p *Player) GetImage() *ebiten.Image {
+func (p *Player) GetImage(tileW, tileH int) Image {
 	frame := p.state.GetFrame()
-	if p.dir == -1 {
-		mirroredFrame := ebiten.NewImage(frame.Bounds().Dx(), frame.Bounds().Dy())
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Scale(-1, 1)
-		op.GeoM.Translate(float64(frame.Bounds().Dx()), 0)
-		mirroredFrame.DrawImage(frame, op)
-		return mirroredFrame
+	geom, h := p.state.GetTransform(tileW, tileH)
+	if p.dx == -1 {
+		geom.Scale(-1, 1)
+		geom.Translate(float64(frame.Bounds().Dx()), 0)
 	}
 
-	return frame
+	return Image{Image: frame, GeoM: geom, Height: h}
 }
 
 func (p *Player) SetState(newId int) {
@@ -81,15 +76,21 @@ func (p *Player) SetState(newId int) {
 	p.state.Start()
 }
 
-func (p *Player) SetMoved(dir int) {
+func (p *Player) GetDirection() (int, int) {
+	return p.dx, p.dy
+}
+
+func (p *Player) SetMoved(dx, dy int) {
 	p.lastMove = 0
-	p.dir = dir
+	p.dx = dx
+	p.dy = dy
 	p.SetState(state.WALK)
 }
 
-func (p *Player) SetAttacking(dir int) {
+func (p *Player) SetAttacking(dx, dy int) {
 	p.lastMove = 0
-	p.dir = dir
+	p.dx = dx
+	p.dy = dy
 	p.SetState(state.ATTACK)
 }
 

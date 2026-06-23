@@ -11,21 +11,17 @@ func DrawRenderables(g *Game, l Level, screen *ebiten.Image, viewport Rect) {
 	for _, result := range g.World.QueryRenderables() {
 		pos := g.World.GetPosition(result)
 		renderable := g.World.GetRenderable(result).(Renderable)
-		img := renderable.GetImage()
+		img := renderable.GetImage(tileWidth, tileHeight)
 
 		if l.PlayerVisible.IsVisible(pos.X, pos.Y) {
 			index := l.GetIndexFromXY(pos.X, pos.Y)
 			tile := l.Tiles[index]
 
-			op := &ebiten.DrawImageOptions{}
-
 			localX := float64(tile.PixelX) - offsetX
 			localY := float64(tile.PixelY) - offsetY
 
-			spriteOffsetX, spriteOffsetY := renderable.GetOffset(tileWidth, tileHeight)
-
-			op.GeoM.Translate(localX-spriteOffsetX, localY-spriteOffsetY)
-			screen.DrawImage(img, op)
+			img.GeoM.Translate(localX, localY-img.Height)
+			screen.DrawImage(img.Image, &ebiten.DrawImageOptions{GeoM: img.GeoM})
 		}
 	}
 }

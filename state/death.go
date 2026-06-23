@@ -12,13 +12,16 @@ type DeathState struct {
 	timer    float64
 	isPlayed bool
 	frames   []*ebiten.Image
-	o        owner
+	size     int
+
+	o owner
 }
 
 func Death(o owner, frames []*ebiten.Image) *DeathState {
 	return &DeathState{
 		id:     DEATH,
 		frames: frames,
+		size:   frames[0].Bounds().Dx(),
 		o:      o,
 	}
 }
@@ -33,6 +36,16 @@ func (s *DeathState) Start() {
 
 func (s *DeathState) GetFrame() *ebiten.Image {
 	return s.frames[s.index]
+}
+
+func (s *DeathState) GetTransform(tW, tH int) (ebiten.GeoM, float64) {
+	cW := float64((s.size - tW) / 2)
+	cH := float64(s.size - tH)
+
+	g := ebiten.GeoM{}
+	g.Translate(-cW, -cH)
+
+	return g, 0
 }
 
 func (s *DeathState) Update(dt float64) {

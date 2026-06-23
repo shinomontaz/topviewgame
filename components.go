@@ -8,9 +8,15 @@ import (
 
 type Position = core.Position
 
+type Image struct {
+	Image  *ebiten.Image
+	GeoM   ebiten.GeoM
+	Height float64
+}
+
 type Renderable interface {
-	GetImage() *ebiten.Image
-	GetOffset(tileW, tileH int) (float64, float64)
+	GetImage(tileW, tileH int) Image
+	// GetOffset(tileW, tileH int) (float64, float64)
 }
 
 type Movable struct {

@@ -11,4 +11,5 @@ const (
 
 type owner interface {
 	SetState(newId int)
+	GetDirection() (int, int)
 }
